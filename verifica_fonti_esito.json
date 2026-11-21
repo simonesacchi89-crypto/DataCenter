@@ -1,0 +1,53 @@
+{
+  "data_prova": "2026-11-21T10:43:47",
+  "risultati": {
+    "catasto_wms": {
+      "stato": "OK",
+      "dettaglio": "Magenta (E801) foglio 4 particella 211"
+    },
+    "catasto_wfs": {
+      "stato": "OK",
+      "dettaglio": "poligono della particella E801_000400.211 restituito (GML 3.2)"
+    },
+    "pvgis_tmy": {
+      "stato": "OK",
+      "dettaglio": "8760 ore; ERA5 2005-2023; Tmax 37.77 °C; ore > 29,4 °C: 303"
+    },
+    "idrogeo": {
+      "stato": "OK",
+      "dettaglio": "Magenta: idraulica=None frane=None; controllo Po: idraulica=['1', '2', '3']"
+    },
+    "sismica": {
+      "stato": "OK",
+      "dettaglio": "Magenta zona 4; controllo L'Aquila zona 2 (dato al 2012)"
+    },
+    "natura2000": {
+      "stato": "OK",
+      "dettaglio": "entro 1 km: 0 siti; entro 5 km: IT2010014 Turbigaccio, Boschi di Castelletto e Lanca di Bernate; IT2050005 Boschi della Fagiana; IT2080301 Boschi del Ticino"
+    },
+    "sitap": {
+      "stato": "OK",
+      "dettaglio": "Magenta (rispetto fiumi): 0 elementi; controllo Bellagio: Como (Lago di)"
+    },
+    "lombardia_contaminati": {
+      "stato": "OK",
+      "dettaglio": "Magenta: 3 siti contaminati, 9 bonificati; Novaceta: MI130.0003 in elenco bonificati"
+    },
+    "falda_cmm": {
+      "stato": "OK",
+      "dettaglio": "classe soggiacenza 5 - 7,5 m"
+    },
+    "nominatim": {
+      "stato": "OK",
+      "dettaglio": "Viale Piemonte, Ponte Vecchio, Magenta, Milano, Lombardia, 20013, Italia -> 45.4659341, 8.8735174"
+    },
+    "overpass": {
+      "stato": "ERRORE",
+      "dettaglio": "URLError: <urlopen error [Errno 104] Connection reset by peer>"
+    },
+    "terna": {
+      "stato": "OK",
+      "dettaglio": "pagina pubblicazioni statistiche raggiungibile, rimanda a dati.terna.it"
+    }
+  }
+}
