@@ -1,0 +1,687 @@
+<title>Passaporto Acqua e Calore</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: pannello dati a sinistra (fisso su desktop), risultati a destra; scala A–G come nell'etichetta UE */
+:root {
+  --bg: #f3f6f7; --surface: #ffffff; --surface-2: #e9eff2; --fg: #13222c; --muted: #566a77; --line: #d4dee4;
+  --water: #1d6a96; --water-soft: #cfe3ef; --heat: #c4552a; --heat-soft: #f6dccf; --focus: #1d6a96;
+  --cA: #1a8a4a; --cB: #4fa34a; --cC: #a9c23f; --cD: #f2c230; --cE: #f0952a; --cF: #e25c27; --cG: #c8262b; --onclass: #ffffff;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e171d; --surface: #15212a; --surface-2: #1c2b35; --fg: #e3ecf1; --muted: #9bb0bd; --line: #2a3b47;
+  --water: #5fb1de; --water-soft: #1b3a4d; --heat: #f08a5d; --heat-soft: #4a2a1c; --focus: #5fb1de; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e171d; --surface: #15212a; --surface-2: #1c2b35; --fg: #e3ecf1; --muted: #9bb0bd; --line: #2a3b47;
+  --water: #5fb1de; --water-soft: #1b3a4d; --heat: #f08a5d; --heat-soft: #4a2a1c; --focus: #5fb1de; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(26px, 4vw, 36px); line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h1 .drop { color: var(--water) } h1 .fire { color: var(--heat) }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+.tag { font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; background: var(--surface); }
+h2 { font-family: var(--f-display); font-weight: 700; font-size: 19px; margin: 0 0 10px; text-wrap: balance; }
+h3 { font-family: var(--f-display); font-weight: 700; font-size: 15px; margin: 0 0 6px; }
+.eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.grid { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } aside.panel { position: static !important; max-height: none !important; } }
+aside.panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label, .lbl { font-size: 13px; font-weight: 600; }
+.hint { font-size: 12px; color: var(--muted); }
+input[type=text], input[type=number], select { font: inherit; font-size: 14px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; width: 100%; min-width: 0; }
+input[type=number] { font-family: var(--f-mono); }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
+.chk input { margin-top: 3px; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; padding: 7px 11px; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); }
+button.primary { background: var(--water); border-color: var(--water); color: var(--surface); }
+button:hover { filter: brightness(1.05); }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+details .inner { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.mini { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mini th, .mini td { padding: 2px 3px; text-align: left; }
+.mini input { padding: 3px 4px; font-size: 12px; }
+main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .kpis { grid-template-columns: minmax(0, 1fr); } }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kpi .v { font-family: var(--f-mono); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.kpi .u { font-size: 13px; color: var(--muted); font-family: var(--f-body); font-weight: 400; }
+.kpi .s { font-size: 12px; color: var(--muted); }
+.kpi.water { border-top: 3px solid var(--water); } .kpi.heat { border-top: 3px solid var(--heat); }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 4px; font-family: var(--f-display); font-weight: 800; font-size: 13px; color: var(--onclass); vertical-align: middle; }
+.cls-A{background:var(--cA)} .cls-B{background:var(--cB)} .cls-C{background:var(--cC)} .cls-D{background:var(--cD);color:#1b1b1b} .cls-E{background:var(--cE)} .cls-F{background:var(--cF)} .cls-G{background:var(--cG)}
+.scale { display: flex; gap: 3px; margin-top: 6px; }
+.scale span { flex: 1; height: 8px; border-radius: 2px; opacity: 0.28; }
+.scale span.on { opacity: 1; height: 12px; margin-top: -2px; }
+.chart-wrap { overflow-x: auto; }
+svg text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; }
+.tbl-wrap { overflow-x: auto; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
+table.cmp th { text-align: left; font-weight: 600; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px 6px; }
+table.cmp td { border-bottom: 1px solid var(--line); padding: 8px 6px; font-variant-numeric: tabular-nums; }
+table.cmp td.n { font-family: var(--f-mono); text-align: right; } table.cmp th.n { text-align: right; }
+table.cmp tr.sel td { background: var(--water-soft); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 20px; font-size: 13px; }
+.facts div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--line); padding: 4px 0; }
+.facts b { font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; text-align: right; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.check { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pill { align-self: flex-start; display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.pill.ok { background: var(--water-soft); color: var(--water); }
+.pill.warn { background: var(--heat-soft); color: var(--heat); }
+.vs { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 13px; }
+.vs b { font-family: var(--f-mono); font-weight: 500; text-align: right; }
+.note { font-size: 13px; color: var(--muted); max-width: 75ch; }
+.method p, .method li { font-size: 14px; max-width: 75ch; }
+.method ul { padding-left: 18px; margin: 6px 0; }
+.method a, .check a { color: var(--water); }
+.copybox { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+#copy-status { font-size: 13px; color: var(--muted); }
+textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: 12px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Calcolatore preliminare · data center</div>
+      <h1>Passaporto <span class="drop">Acqua</span> e <span class="fire">Calore</span></h1>
+      <p class="lede">Stima energia, acqua consumata in sito e acqua consumata dalle centrali elettriche che alimentano un data center, ora per ora su un anno climatico tipo. Classi secondo la bozza dell'etichetta UE (A–G).</p>
+    </div>
+    <span class="tag" id="loaded-tag">Esempio caricato</span>
+  </header>
+
+  <div class="grid">
+    <aside class="panel" aria-label="Dati del progetto">
+      <div>
+        <div class="eyebrow">Progetto</div>
+        <div class="btns" style="margin-top:8px">
+          <button type="button" id="btn-tuscia">Esempio Tuscia 5 MW</button>
+          <button type="button" id="btn-aws">Caso reale: AWS Rho-Pero</button>
+          <button type="button" id="btn-magenta">Caso reale: Magenta (SIA)</button>
+        </div>
+      </div>
+      <div class="field"><label for="prj-name">Nome progetto</label><input type="text" id="prj-name"></div>
+      <div class="field"><label for="site">Clima del sito</label>
+        <select id="site">
+          <option value="viterbo">Viterbo (300 m) – Tuscia</option>
+          <option value="roma">Roma Ciampino</option>
+          <option value="milano">Milano Linate</option>
+          <option value="custom">Personalizzato (modifica la tabella)</option>
+        </select>
+        <span class="hint">Medie 1991–2020. Le ore del giorno e le ondate di calore sono generate in modo statistico. Civita Castellana è più in basso di Viterbo (circa 145 m) e probabilmente un po' più calda.</span>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="it-mw">Potenza IT (MW)</label><input type="number" id="it-mw" min="0.1" step="0.1"></div>
+        <div class="field"><label for="load">Carico medio (%)</label><input type="number" id="load" min="5" max="100" step="5"></div>
+      </div>
+      <div class="field"><label for="sys">Sistema di raffreddamento</label>
+        <select id="sys">
+          <option value="aria_dry">Chiller ad aria + free cooling, circuito chiuso</option>
+          <option value="aria_adiab">Dry cooler con raffreddamento adiabatico estivo</option>
+          <option value="torri">Torri evaporative + chiller ad acqua</option>
+          <option value="diretta">Aria esterna diretta + evaporativo estivo</option>
+          <option value="liquido">Liquido diretto al chip + dry cooler</option>
+        </select>
+        <span class="hint" id="sys-hint"></span>
+      </div>
+      <div class="field"><label for="pv">Elettricità prodotta in sito (%)</label><input type="number" id="pv" min="0" max="100" step="1">
+        <span class="hint">Solo autoproduzione fisica. Garanzie d'origine e PPA non cambiano l'acqua consumata dalle centrali della rete.</span></div>
+      <div class="field"><label for="e-decl">Energia annua dichiarata (GWh, facoltativo)</label><input type="number" id="e-decl" min="0" step="0.1" placeholder="es. dal documento VIA">
+        <span class="hint">Se la inserisci, l'acqua indiretta si calcola su questo valore e vedi il PUE che ne deriva.</span></div>
+      <label class="chk"><input type="checkbox" id="hydro-evap"><span>Conta l'evaporazione dei bacini idroelettrici (metodo NREL). Di default è esclusa, come nel metodo The Green Grid.</span></label>
+
+      <details id="adv">
+        <summary>Parametri tecnici del sistema</summary>
+        <div class="inner" id="adv-inner"></div>
+      </details>
+      <details>
+        <summary>Clima mensile del sito</summary>
+        <div class="inner">
+          <span class="hint">Massima e minima medie giornaliere (°C), umidità relativa media (%).</span>
+          <div class="tbl-wrap"><table class="mini" id="clima-tbl"></table></div>
+          <div class="row2">
+            <div class="field"><label for="sd">Variabilità giornaliera (°C)</label><input type="number" id="sd" min="0" max="6" step="0.5"></div>
+            <div class="field"><label for="years">Anni simulati</label><input type="number" id="years" min="1" max="30" step="1"></div>
+          </div>
+        </div>
+      </details>
+      <details>
+        <summary>Mix elettrico e acqua per kWh</summary>
+        <div class="inner">
+          <span class="hint">Italia 2025 (Terna, GWh). Litri consumati per kWh prodotto, per fonte.</span>
+          <div class="tbl-wrap"><table class="mini" id="mix-tbl"></table></div>
+        </div>
+      </details>
+    </aside>
+
+    <main>
+      <section class="kpis" id="kpis" aria-live="polite"></section>
+
+      <section class="card">
+        <h2>Mese per mese</h2>
+        <div class="chart-wrap"><svg id="chart" viewBox="0 0 680 250" width="100%" role="img" aria-label="Acqua consumata in sito e PUE per mese"></svg></div>
+        <div class="legend"><span><i style="background:var(--water)"></i>Acqua diretta (m³/mese)</span><span><i style="background:var(--heat)"></i>PUE mensile</span></div>
+      </section>
+
+      <section class="card">
+        <h2>Dettaglio del calcolo</h2>
+        <div class="facts" id="facts"></div>
+      </section>
+
+      <section class="card">
+        <h2>Stesso sito, cinque sistemi a confronto</h2>
+        <p class="note">Stessa potenza, carico e clima. Cambia solo il raffreddamento, con i parametri tipici di ciascun sistema.</p>
+        <div class="tbl-wrap"><table class="cmp" id="cmp"></table></div>
+      </section>
+
+      <section class="card">
+        <h2>I conti tornano? Confronto con dati pubblicati</h2>
+        <p class="note">Il modello è stato messo alla prova su casi reali con numeri pubblici. Questi confronti usano parametri fissi e non cambiano con i tuoi dati.</p>
+        <div class="checks" id="checks"></div>
+      </section>
+
+      <section class="card">
+        <h2>Riepilogo per il dossier</h2>
+        <div class="copybox"><button type="button" class="primary" id="btn-copy">Copia riepilogo</button><span id="copy-status"></span></div>
+        <textarea id="summary-fallback" readonly hidden aria-label="Riepilogo da copiare"></textarea>
+      </section>
+
+      <section class="card method">
+        <h2>Metodo e fonti</h2>
+        <ul>
+          <li><b>Clima.</b> Medie mensili 1991–2020 (Milano Linate, Roma Ciampino, Viterbo). Per ogni giorno si aggiunge uno scarto casuale con persistenza, così compaiono ondate di calore. Ogni sistema viene simulato su più anni sintetici: il risultato è la media, la forbice è minimo–massimo.</li>
+          <li><b>Acqua diretta.</b> Ogni kWh di calore smaltito per evaporazione consuma circa 1,48 litri (calore latente). Si aggiunge lo spurgo in base al numero di ricircoli: acqua totale = evaporata × N / (N − 1). Torri: evaporazione quasi tutto l'anno. Sistemi adiabatici ed evaporativi diretti: solo sopra la soglia di temperatura.</li>
+          <li><b>Acqua indiretta.</b> Energia totale del sito × litri per kWh della rete. I litri per kWh di ogni fonte seguono il metodo The Green Grid (gas 0,8; carbone 2,2; nucleare 3,3; rinnovabili 0), con biomasse e geotermia dai valori mediani NREL. L'import è valutato alla media UE di 1,33 L/kWh.</li>
+          <li><b>Classi A–G.</b> Soglie della bozza di regolamento delegato C(2026) 3472. WUE conta solo l'acqua dolce prelevata in sito: l'acqua delle centrali resta fuori dall'etichetta.</li>
+          <li><b>Limiti.</b> È uno strumento di prima valutazione. Per un progetto vero vanno inseriti i dati dei costruttori (curve dei chiller, portate d'aria, ricircoli) e, quando c'è, il clima orario misurato del sito.</li>
+        </ul>
+        <p class="note">Fonti: <a href="https://energy.ec.europa.eu/document/download/45309975-26bb-425c-84c7-c145097d18a7_en?filename=C_2026_3472_1_EN_annexe_acte_autonome_part1_v7.pdf" target="_blank" rel="noopener">Commissione UE, allegato C(2026) 3472</a> ·
+        <a href="https://energy.ec.europa.eu/document/download/8a87a5fe-0260-462a-b165-09f1496d1aa0_en?filename=COM_2026_500_1_EN_ACT_part1_v4.pdf" target="_blank" rel="noopener">COM(2026) 500</a> ·
+        <a href="https://download.terna.it/terna/Rapporto_mensile_dicembre_25_8de59df161f93af.pdf" target="_blank" rel="noopener">Terna, rapporto dicembre 2025</a> ·
+        <a href="https://www.nrc.gov/docs/ML1428/ML14286A088.pdf" target="_blank" rel="noopener">NREL, fattori di consumo idrico (2011)</a> ·
+        <a href="https://www.environmentenergyleader.com/articles/45575-eu-data-center-water-grades-miss-up-to-86-of-the-footprint" target="_blank" rel="noopener">Analisi acqua indiretta UE</a> ·
+        <a href="https://piurho.it/approfondimenti/data-center/data-center-cosa-dove/" target="_blank" rel="noopener">piùRho, dati VIA AWS Rho-Pero</a> ·
+        <a href="https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Italy-LOCALIZED.pdf" target="_blank" rel="noopener">Microsoft, data center in Italia</a> ·
+        <a href="https://datacenters.microsoft.com/sustainability/efficiency/" target="_blank" rel="noopener">Microsoft, PUE e WUE</a> ·
+        <a href="https://slow-news.com/societa/danta-center-magenta-la-storia-e-quel-che-ce-da-sapere" target="_blank" rel="noopener">Slow News, data center Magenta</a> · Documenti VIA MXP Magenta, dicembre 2025 (Studio di Impatto Ambientale, relazione CO₂) ·
+        <a href="https://en.wikipedia.org/wiki/Milan" target="_blank" rel="noopener">Clima Milano</a> ·
+        <a href="https://en.wikipedia.org/wiki/Rome" target="_blank" rel="noopener">Clima Roma</a> ·
+        <a href="https://en.wikipedia.org/wiki/Viterbo" target="_blank" rel="noopener">Clima Viterbo</a></p>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+// Motore di calcolo: data center, acqua diretta e indiretta, energia. Simulazione oraria su un anno tipo.
+const HFG = 2430; // kJ/kg, calore latente di evaporazione dell'acqua a ~30 °C
+const L_PER_KWH_HEAT = 3600 / HFG; // ~1,48 litri evaporati per kWh termico smaltito per evaporazione
+
+const DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function gauss(rnd) {
+  let u = 0, v = 0;
+  while (u === 0) u = rnd();
+  while (v === 0) v = rnd();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function svp(T) { return 6.112 * Math.exp((17.62 * T) / (243.12 + T)); } // hPa (Magnus)
+function dewFromRH(T, RH) {
+  const g = Math.log(RH / 100) + (17.62 * T) / (243.12 + T);
+  return (243.12 * g) / (17.62 - g);
+}
+function rhFromDew(T, Td) { return Math.min(100, 100 * svp(Td) / svp(T)); }
+function wetBulb(T, RH) { // Stull 2011
+  return T * Math.atan(0.151977 * Math.sqrt(RH + 8.313659)) + Math.atan(T + RH) - Math.atan(RH - 1.676331)
+    + 0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH) - 4.686035;
+}
+function diurnal(h) { // 0 al minimo (ore 6), 1 al massimo (ore 15)
+  if (h >= 6 && h <= 15) return 0.5 - 0.5 * Math.cos(Math.PI * (h - 6) / 9);
+  const t = ((h - 15 + 24) % 24) / 15;
+  return 0.5 + 0.5 * Math.cos(Math.PI * t);
+}
+
+// clima: {tmax[12], tmin[12], rh[12], td[12]|null}
+function buildYear(clima, sd, seed) {
+  const rnd = mulberry32(seed);
+  const hours = [];
+  let anom = 0;
+  for (let m = 0; m < 12; m++) {
+    const tmean = (clima.tmax[m] + clima.tmin[m]) / 2;
+    const tdM = clima.td && clima.td[m] != null ? clima.td[m] : dewFromRH(tmean, clima.rh[m]);
+    for (let d = 0; d < DAYS[m]; d++) {
+      anom = 0.7 * anom + Math.sqrt(1 - 0.49) * gauss(rnd) * sd; // persistenza tipo ondata di calore
+      const tx = clima.tmax[m] + anom, tn = clima.tmin[m] + anom;
+      const td = tdM + 0.5 * anom;
+      for (let h = 0; h < 24; h++) {
+        const T = tn + (tx - tn) * diurnal(h);
+        const Tdh = Math.min(td, T - 0.1);
+        const RH = rhFromDew(T, Tdh);
+        hours.push({ m, T, RH, Twb: Math.min(T, wetBulb(T, RH)) });
+      }
+    }
+  }
+  return hours;
+}
+
+function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+
+// p: parametri del progetto
+function simulate(p, climaHours) {
+  const itKW = p.itMW * 1000 * p.load;
+  const mon = Array.from({ length: 12 }, () => ({ it: 0, tot: 0, water: 0, hoursWater: 0 }));
+  let itE = 0, totE = 0, water = 0, evapTot = 0, hoursWater = 0, hoursOut = 0, heat = 0, mechHours = 0, pueHourMax = 0;
+  for (const hr of climaHours) {
+    const { T, Twb } = hr;
+    const Q = itKW * p.kHeat; // calore da smaltire (kW)
+    let cool = 0, evap = 0, makeup = 0;
+    if (p.sys === 'dry') {
+      // chiller ad aria con free cooling, circuito chiuso, opzionale pre-raffreddamento adiabatico
+      let Teff = T, dPre = 0;
+      if (p.adiabatic && T > p.tSwitch) { dPre = p.eps * (T - Twb); Teff = T - dPre; }
+      const fMech = clamp((Teff - p.tFcFull) / (p.tFcNone - p.tFcFull), 0, 1);
+      const cop = clamp(p.copA - p.copB * Teff, 2.2, 9);
+      const W = fMech * Q / cop;
+      cool = p.fan * Q + W;
+      if (fMech > 0) mechHours += 1;
+      if (dPre > 0) { evap = (Q + W) * L_PER_KWH_HEAT * dPre / p.dTcoil; }
+    } else if (p.sys === 'tower') {
+      // torri evaporative + chiller raffreddati ad acqua, economizzatore lato acqua
+      const fMech = clamp((Twb - p.tFcFull) / (p.tFcNone - p.tFcFull), 0, 1);
+      const cop = clamp(p.copA - p.copB * Twb, 3.5, 11);
+      const W = fMech * Q / cop;
+      cool = p.fan * Q + W;
+      if (fMech > 0) mechHours += 1;
+      const dryMode = T < p.tDry; // torri ibride: a secco quando fa freddo
+      if (!dryMode) evap = (Q + W) * L_PER_KWH_HEAT * p.fEvap;
+    } else if (p.sys === 'direct') {
+      // aria esterna diretta + raffreddamento evaporativo sopra soglia, senza chiller
+      cool = p.fan * Q;
+      if (T > p.tSwitch) {
+        const need = T - p.tSup;
+        const can = p.eps * (T - Twb);
+        const dPre = Math.max(0, Math.min(need, can));
+        if (can < need) hoursOut += 1;
+        evap = Q * L_PER_KWH_HEAT * dPre / p.dTair;
+      }
+    }
+    if (evap > 0) { makeup = evap * p.coc / (p.coc - 1); hoursWater += 1; }
+    const acc = itKW * p.accessori; // usi accessori (umidificazione, servizi) L/h
+    const totKW = itKW + itKW * p.losses + cool;
+    if (totKW / itKW > pueHourMax) pueHourMax = totKW / itKW;
+    itE += itKW; totE += totKW; water += makeup + acc; evapTot += evap; heat += Q;
+    const mm = mon[hr.m]; mm.it += itKW; mm.tot += totKW; mm.water += makeup + acc; if (evap > 0) mm.hoursWater += 1;
+  }
+  return {
+    itMWh: itE / 1000, totMWh: totE / 1000, pue: totE / itE,
+    waterM3: water / 1000, wue: water / itE, evapM3: evapTot / 1000,
+    hoursWater, hoursOut, mechHours, heatMWh: heat / 1000, pueHourMax,
+    months: mon.map(x => ({ pue: x.tot / x.it, waterM3: x.water / 1000, hoursWater: x.hoursWater, itMWh: x.it / 1000 })),
+  };
+}
+
+// Più anni sintetici (stesso clima medio, giornate diverse) per avere media e forbice
+const _yearCache = {};
+function getYears(clima, sd, n) {
+  const key = JSON.stringify(clima) + '|' + sd + '|' + n;
+  if (!_yearCache[key]) {
+    const ys = [];
+    for (let i = 0; i < n; i++) ys.push(buildYear(clima, sd, 1000 + i * 7919));
+    _yearCache[key] = ys;
+  }
+  return _yearCache[key];
+}
+function simulateMulti(p, clima, sd, n) {
+  const runs = getYears(clima, sd, n).map(H => simulate(p, H));
+  const avg = k => runs.reduce((s, r) => s + r[k], 0) / runs.length;
+  const min = k => Math.min(...runs.map(r => r[k]));
+  const max = k => Math.max(...runs.map(r => r[k]));
+  const out = {};
+  for (const k of ['itMWh', 'totMWh', 'waterM3', 'evapM3', 'hoursWater', 'hoursOut', 'mechHours', 'heatMWh']) out[k] = avg(k);
+  out.pue = out.totMWh / out.itMWh;
+  out.wue = out.waterM3 * 1000 / (out.itMWh * 1000);
+  out.waterMin = min('waterM3'); out.waterMax = max('waterM3');
+  out.pueMin = min('pue'); out.pueMax = max('pue'); out.pueHourMax = max('pueHourMax');
+  out.months = Array.from({ length: 12 }, (_, m) => {
+    const it = runs.reduce((s, r) => s + r.months[m].itMWh, 0);
+    const pueW = runs.reduce((s, r) => s + r.months[m].pue * r.months[m].itMWh, 0) / it;
+    return { pue: pueW, waterM3: runs.reduce((s, r) => s + r.months[m].waterM3, 0) / runs.length };
+  });
+  return out;
+}
+function hoursAbove(clima, sd, n, T) {
+  const ys = getYears(clima, sd, n);
+  return ys.reduce((s, H) => s + H.filter(h => h.T > T).length, 0) / ys.length;
+}
+
+function gridFactor(mix, f, includeHydroEvap) {
+  // mix in GWh; f in L/kWh
+  let tot = 0, w = 0;
+  const parts = [];
+  for (const k of Object.keys(mix)) {
+    tot += mix[k];
+  }
+  for (const k of Object.keys(mix)) {
+    let fk = f[k] || 0;
+    if (k === 'idro' && includeHydroEvap) fk = f.idroEvap;
+    const c = mix[k] / tot * fk;
+    w += c; parts.push({ k, share: mix[k] / tot, f: fk, c });
+  }
+  return { factor: w, parts };
+}
+
+function classPUE(x) { return x <= 1.15 ? 'A' : x <= 1.25 ? 'B' : x <= 1.35 ? 'C' : x <= 1.5 ? 'D' : x <= 1.7 ? 'E' : x <= 1.9 ? 'F' : 'G'; }
+function classWUE(x) { return x <= 0.1 ? 'A' : x <= 0.2 ? 'B' : x <= 0.4 ? 'C' : x <= 0.6 ? 'D' : x <= 0.8 ? 'E' : x <= 1.0 ? 'F' : 'G'; }
+
+if (typeof module !== 'undefined') module.exports = { buildYear, simulate, simulateMulti, hoursAbove, gridFactor, classPUE, classWUE, L_PER_KWH_HEAT };
+
+
+const CLIMI = {
+  milano: { tmax:[7.3,10.0,15.5,19.3,23.9,28.1,30.7,29.9,25.5,19.0,12.4,7.4], tmin:[-0.4,0.6,4.4,8.4,12.8,17.2,19.3,18.8,14.9,10.2,5.3,0.6], rh:[78.9,73.6,68,67.7,67.2,66.9,66.2,67.4,70,76.5,81,81.8], td:[0.2,0.8,3.9,7.0,11.2,14.7,16.6,16.8,13.4,10.1,5.9,1.2] },
+  roma: { tmax:[12.0,13.0,15.8,18.8,22.3,28.1,31.0,31.6,26.7,22.2,16.9,12.7], tmin:[3.4,3.4,5.9,8.6,12.6,16.7,19.3,19.8,16.0,12.4,8.5,4.7], rh:[75.8,71.5,70.6,70.4,69,65.4,63.3,64.1,69.1,74,77.9,77.2], td:[3.9,3.5,5.8,8.5,12.1,15.1,16.9,17.7,15.5,12.9,9.3,5.2] },
+  viterbo: { tmax:[10.6,11.9,14.7,17.9,22.4,27.4,31.2,31.3,26.0,20.7,15.0,11.2], tmin:[2.2,2.2,4.0,6.7,10.2,14.2,16.9,17.5,14.3,10.5,6.3,3.1], rh:[74.5,70.6,69.6,70.1,69.2,66.1,62.5,62.8,67.8,73.3,77.2,76.1], td:null },
+};
+const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+const MIX_LABELS = { gas_olio:'Gas e olio', carbone:'Carbone', biomasse:'Biomasse', idro:'Idroelettrico', eolico:'Eolico', fv:'Fotovoltaico', geo:'Geotermico', import:'Import (saldo)' };
+const MIX0 = { gas_olio:134382, carbone:2975, biomasse:15699, idro:41365, eolico:21363, fv:44290, geo:5261, import:46889 };
+const F0 = { gas_olio:0.8, carbone:2.2, biomasse:2.09, idro:0, eolico:0, fv:0, geo:0.038, import:1.33, idroEvap:17.0 };
+
+const SYS = {
+  aria_dry:  { name:'Chiller ad aria + free cooling', short:'Aria, circuito chiuso', heatT:'25–35 °C', hint:'Nessuna evaporazione: acqua solo per usi accessori. Più energia nelle ore calde.',
+               p:{ sys:'dry', tFcFull:12, tFcNone:22, copA:9, copB:0.15, fan:0.04, adiabatic:false, coc:3, tSwitch:26, eps:0.8, dTcoil:10 } },
+  aria_adiab:{ name:'Dry cooler + adiabatico estivo', short:'Adiabatico', heatT:'25–35 °C', hint:"L'aria viene pre-raffreddata con acqua solo sopra la soglia di temperatura.",
+               p:{ sys:'dry', tFcFull:12, tFcNone:22, copA:9, copB:0.15, fan:0.04, adiabatic:true, tSwitch:26, eps:0.8, dTcoil:10, coc:2.7 } },
+  torri:     { name:'Torri evaporative + chiller ad acqua', short:'Torri evaporative', heatT:'28–35 °C', hint:"Molto efficiente in energia, ma evapora acqua quasi tutto l'anno.",
+               p:{ sys:'tower', tFcFull:8, tFcNone:14, copA:11, copB:0.2, fan:0.03, fEvap:0.85, coc:4, tDry:-50 } },
+  diretta:   { name:'Aria esterna diretta + evaporativo', short:'Aria diretta', heatT:'25–35 °C', hint:'Nessun chiller. Acqua solo nelle ore più calde. Parametri tarati sul caso AWS Rho-Pero.',
+               p:{ sys:'direct', tSwitch:28, tSup:24, eps:0.85, dTair:12, coc:2.7, fan:0.03 } },
+  liquido:   { name:'Liquido diretto al chip + dry cooler', short:'Liquido al chip', heatT:'40–55 °C', hint:'Acqua calda in uscita: free cooling quasi tutto l\'anno e calore più facile da riusare.',
+               p:{ sys:'dry', tFcFull:28, tFcNone:36, copA:9, copB:0.15, fan:0.03, adiabatic:false, coc:3, tSwitch:30, eps:0.8, dTcoil:10 } },
+};
+const COMMON0 = { losses:0.05, kHeat:1.03, accessori:0 };
+
+const PARAMS = [
+  { k:'losses', l:'Perdite elettriche (UPS, quadri)', u:'quota del carico IT', step:0.01, all:true },
+  { k:'fan', l:'Ventilatori e pompe', u:'kW per kW di calore', step:0.005, all:true },
+  { k:'kHeat', l:'Calore da smaltire / carico IT', u:'rapporto', step:0.01, all:true },
+  { k:'accessori', l:'Usi accessori di acqua', u:'L per kWh IT', step:0.005, all:true },
+  { k:'tFcFull', l:'Free cooling completo sotto', u:'°C (bulbo umido per torri)', step:0.5, sys:['dry','tower'] },
+  { k:'tFcNone', l:'Solo compressori sopra', u:'°C (bulbo umido per torri)', step:0.5, sys:['dry','tower'] },
+  { k:'copA', l:'COP chiller: valore base', u:'COP = base − pendenza × T', step:0.1, sys:['dry','tower'] },
+  { k:'copB', l:'COP chiller: pendenza', u:'per °C', step:0.01, sys:['dry','tower'] },
+  { k:'tSwitch', l:'Acqua attiva sopra', u:'°C aria esterna', step:0.1, sys:['dry_adiab','direct'] },
+  { k:'eps', l:'Efficacia evaporativa', u:'0–1', step:0.05, sys:['dry_adiab','direct'] },
+  { k:'dTcoil', l:'Salto termico aria sul dry cooler', u:'K', step:0.5, sys:['dry_adiab'] },
+  { k:'tSup', l:'Temperatura aria di mandata', u:'°C', step:0.5, sys:['direct'] },
+  { k:'dTair', l:'Salto termico aria nei server', u:'K', step:0.5, sys:['direct'] },
+  { k:'fEvap', l:'Quota di calore smaltita evaporando', u:'0–1', step:0.05, sys:['tower'] },
+  { k:'tDry', l:'Torri a secco sotto', u:'°C (−50 = mai)', step:1, sys:['tower'] },
+  { k:'coc', l:'Ricircoli prima dello spurgo', u:'cicli di concentrazione', step:0.1, sys:['dry_adiab','tower','direct'] },
+];
+
+const state = {};
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 0) => { let s = Number(x).toFixed(d); if (/^-0(\.0+)?$/.test(s)) s = s.slice(1); const neg = s[0] === '-'; if (neg) s = s.slice(1); let [i, f] = s.split('.'); i = i.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return (neg ? '−' : '') + i + (f ? ',' + f : ''); };
+const fmt2 = x => fmt(x, 2), fmt3 = x => fmt(x, 3);
+
+function sysKeyForParams(p) { return p.sys === 'dry' && p.adiabatic ? 'dry_adiab' : p.sys; }
+
+function loadPreset(key, overrides = {}) {
+  state.sysKey = key;
+  state.p = Object.assign({}, COMMON0, SYS[key].p, overrides);
+}
+
+function setProject(cfg) {
+  $('prj-name').value = cfg.name; $('site').value = cfg.site; $('it-mw').value = cfg.itMW; $('load').value = cfg.load;
+  $('sys').value = cfg.sys; $('pv').value = cfg.pv; $('e-decl').value = cfg.eDecl || ''; $('hydro-evap').checked = false;
+  $('sd').value = 2.5; $('years').value = 10;
+  state.clima = JSON.parse(JSON.stringify(CLIMI[cfg.site === 'custom' ? 'viterbo' : cfg.site]));
+  state.mix = Object.assign({}, MIX0); state.f = Object.assign({}, F0);
+  loadPreset(cfg.sys, cfg.overrides || {});
+  $('loaded-tag').textContent = cfg.tag;
+  renderAdv(); renderClima(); renderMix(); run();
+}
+
+function renderAdv() {
+  const sk = sysKeyForParams(state.p);
+  $('sys-hint').textContent = SYS[state.sysKey].hint;
+  $('adv-inner').innerHTML = PARAMS.filter(x => x.all || x.sys.includes(sk)).map(x =>
+    `<div class="field"><label for="pa-${x.k}">${x.l}</label><input type="number" id="pa-${x.k}" data-k="${x.k}" step="${x.step}" value="${state.p[x.k]}"><span class="hint">${x.u}</span></div>`).join('')
+    + '<button type="button" id="btn-reset">Ripristina valori tipici</button>';
+  $('adv-inner').querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value); if (!isNaN(v)) { state.p[inp.dataset.k] = v; schedule(); }
+  }));
+  $('btn-reset').addEventListener('click', () => { loadPreset(state.sysKey); renderAdv(); run(); });
+}
+
+function renderClima() {
+  const c = state.clima;
+  let h = '<tr><th></th><th>Max</th><th>Min</th><th>UR %</th></tr>';
+  for (let m = 0; m < 12; m++) h += `<tr><td>${MESI[m]}</td>` + ['tmax','tmin','rh'].map(k => `<td><input type="number" id="cl-${k}-${m}" data-k="${k}" data-m="${m}" step="0.1" value="${c[k][m]}"></td>`).join('') + '</tr>';
+  $('clima-tbl').innerHTML = h;
+  $('clima-tbl').querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value); if (isNaN(v)) return;
+    state.clima[inp.dataset.k][+inp.dataset.m] = v;
+    state.clima.td = null; // con dati modificati il punto di rugiada si ricalcola da T e UR
+    $('site').value = 'custom'; schedule();
+  }));
+}
+
+function renderMix() {
+  let h = '<tr><th>Fonte</th><th>GWh</th><th>L/kWh</th></tr>';
+  for (const k of Object.keys(MIX0)) h += `<tr><td>${MIX_LABELS[k]}</td><td><input type="number" id="mx-${k}" data-k="${k}" data-t="mix" value="${state.mix[k]}"></td><td><input type="number" id="mf-${k}" data-k="${k}" data-t="f" step="0.01" value="${state.f[k]}"></td></tr>`;
+  h += `<tr><td colspan="2">Idro con evaporazione bacini</td><td><input type="number" id="mf-idroEvap" data-k="idroEvap" data-t="f" step="0.1" value="${state.f.idroEvap}"></td></tr>`;
+  $('mix-tbl').innerHTML = h;
+  $('mix-tbl').querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value); if (isNaN(v)) return; state[inp.dataset.t][inp.dataset.k] = v; schedule();
+  }));
+}
+
+let timer = null;
+function schedule() { clearTimeout(timer); timer = setTimeout(run, 180); }
+
+function readInputs() {
+  return {
+    name: $('prj-name').value.trim() || 'Progetto senza nome',
+    itMW: Math.max(0.1, parseFloat($('it-mw').value) || 1),
+    load: Math.min(1, Math.max(0.05, (parseFloat($('load').value) || 70) / 100)),
+    pv: Math.min(1, Math.max(0, (parseFloat($('pv').value) || 0) / 100)),
+    hydro: $('hydro-evap').checked,
+    eDecl: Math.max(0, parseFloat($('e-decl').value) || 0),
+    sd: Math.max(0, parseFloat($('sd').value) || 0),
+    years: Math.min(30, Math.max(1, Math.round(parseFloat($('years').value) || 10))),
+  };
+}
+
+function compute(p, inp, useDecl = true) {
+  const r = simulateMulti(Object.assign({}, p, { itMW: inp.itMW, load: inp.load }), state.clima, inp.sd, inp.years);
+  const g = gridFactor(state.mix, state.f, inp.hydro);
+  r.gridF = g.factor; r.gridParts = g.parts;
+  r.useDecl = useDecl && inp.eDecl > 0;
+  r.energyForGrid = r.useDecl ? inp.eDecl * 1000 : r.totMWh;
+  r.pueImpl = r.useDecl ? inp.eDecl * 1000 / r.itMWh : null;
+  r.indirM3 = r.energyForGrid * (1 - inp.pv) * g.factor; // MWh × L/kWh = m³
+  r.totalM3 = r.waterM3 + r.indirM3;
+  r.footprint = r.totalM3 / r.itMWh; // m³/MWh = L/kWh
+  r.indShare = r.totalM3 > 0 ? r.indirM3 / r.totalM3 : 0;
+  return r;
+}
+
+function badge(c) { return `<span class="badge cls-${c}">${c}</span>`; }
+function scale(c) { return '<div class="scale" aria-hidden="true">' + 'ABCDEFG'.split('').map(x => `<span class="cls-${x}${x === c ? ' on' : ''}"></span>`).join('') + '</div>'; }
+
+let last = null;
+function run() {
+  const inp = readInputs();
+  const r = compute(state.p, inp);
+  last = { inp, r };
+  const cp = classPUE(r.pue), cw = classWUE(r.wue);
+  $('kpis').innerHTML = `
+    <div class="kpi"><span class="eyebrow">PUE · efficienza energetica</span><span class="v">${fmt2(r.pue)} ${badge(cp)}</span>${scale(cp)}<span class="s">Forbice ${fmt2(r.pueMin)}–${fmt2(r.pueMax)}</span></div>
+    <div class="kpi water"><span class="eyebrow">WUE · acqua in sito</span><span class="v">${fmt3(r.wue)} <span class="u">L/kWh</span> ${badge(cw)}</span>${scale(cw)}<span class="s">È il valore che va in etichetta UE</span></div>
+    <div class="kpi water"><span class="eyebrow">Acqua diretta</span><span class="v">${fmt(r.waterM3)} <span class="u">m³/anno</span></span><span class="s">Forbice ${fmt(r.waterMin)}–${fmt(r.waterMax)} m³ · ${fmt(r.waterM3 / 2500, 1)} piscine olimpioniche</span></div>
+    <div class="kpi water"><span class="eyebrow">Acqua indiretta (centrali)</span><span class="v">${fmt(r.indirM3)} <span class="u">m³/anno</span></span><span class="s">Rete: ${fmt2(r.gridF)} L/kWh${r.useDecl ? ' · su energia dichiarata' : ''} · fuori dall'etichetta UE</span></div>
+    <div class="kpi water"><span class="eyebrow">Impronta idrica completa</span><span class="v">${fmt2(r.footprint)} <span class="u">L/kWh IT</span></span><span class="s">${fmt(r.indShare * 100)}% viene dalle centrali</span></div>
+    <div class="kpi heat"><span class="eyebrow">Calore di scarto</span><span class="v">${fmt(r.heatMWh / 1000, 1)} <span class="u">GWh termici/anno</span></span><span class="s">Temperatura indicativa ${SYS[state.sysKey].heatT}</span></div>`;
+  $('facts').innerHTML = [
+    ['Energia IT', fmt(r.itMWh / 1000, 1) + ' GWh/anno'],
+    ['Energia totale del sito', fmt(r.totMWh / 1000, 1) + ' GWh/anno'],
+    ['Acqua evaporata', fmt(r.evapM3) + ' m³/anno'],
+    ['Spurgo e usi accessori', fmt(r.waterM3 - r.evapM3) + ' m³/anno'],
+    ["Ore all'anno con uso d'acqua", fmt(r.hoursWater) + ' h (' + fmt(r.hoursWater / 87.6, 1) + '%)'],
+    ['Ore con compressori accesi', fmt(r.mechHours) + ' h'],
+    ['PUE nell\'ora peggiore', fmt2(r.pueHourMax)],
+    ['Ore fuori temperatura di mandata', fmt(r.hoursOut) + ' h'],
+    ['Litri per kWh della rete', fmt2(r.gridF) + ' L/kWh'],
+    ['Anni climatici simulati', inp.years + ' (media e forbice)'],
+    ...(r.useDecl ? [['Energia dichiarata', fmt(inp.eDecl, 1) + ' GWh/anno'], ['PUE che ne deriva', fmt2(r.pueImpl) + ' (classe ' + classPUE(r.pueImpl) + ')']] : []),
+  ].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('');
+  drawChart(r.months);
+  renderCompare(inp);
+}
+
+function drawChart(months) {
+  const W = 680, H = 250, L = 56, R = 48, T = 28, B = 30;
+  const pw = W - L - R, ph = H - T - B;
+  const maxW = Math.max(1, ...months.map(m => m.waterM3));
+  const niceMax = (() => { const p = Math.pow(10, Math.floor(Math.log10(maxW))); const s = [1, 2, 2.5, 5, 10].find(s => s * p >= maxW); return s * p; })();
+  const pues = months.map(m => m.pue);
+  let pMin = Math.floor(Math.min(...pues) * 20) / 20, pMax = Math.ceil(Math.max(...pues) * 20) / 20;
+  if (pMax - pMin < 0.1) { pMax = pMin + 0.1; }
+  const bw = pw / 12;
+  let s = '';
+  for (let i = 0; i <= 4; i++) {
+    const y = T + ph - ph * i / 4;
+    s += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    s += `<text x="${L - 6}" y="${y + 4}" text-anchor="end">${fmt(niceMax * i / 4)}</text>`;
+    s += `<text x="${W - R + 6}" y="${y + 4}" text-anchor="start">${fmt2(pMin + (pMax - pMin) * i / 4)}</text>`;
+  }
+  months.forEach((m, i) => {
+    const h = ph * m.waterM3 / niceMax, x = L + i * bw + bw * 0.18;
+    s += `<rect x="${x}" y="${T + ph - h}" width="${bw * 0.64}" height="${Math.max(0, h)}" fill="var(--water)" rx="2"><title>${MESI[i]}: ${fmt(m.waterM3)} m³</title></rect>`;
+    s += `<text x="${L + i * bw + bw / 2}" y="${H - 10}" text-anchor="middle">${MESI[i]}</text>`;
+  });
+  const pts = months.map((m, i) => [L + i * bw + bw / 2, T + ph - ph * (m.pue - pMin) / (pMax - pMin)]);
+  s += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="var(--heat)" stroke-width="2.5"/>`;
+  pts.forEach((p, i) => s += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="var(--heat)"><title>${MESI[i]}: PUE ${fmt2(months[i].pue)}</title></circle>`);
+  s += `<text x="${L - 6}" y="11" text-anchor="end">m³</text><text x="${W - R + 6}" y="11">PUE</text>`;
+  $('chart').innerHTML = s;
+}
+
+function renderCompare(inp) {
+  const rows = Object.keys(SYS).map(k => {
+    const p = k === state.sysKey ? state.p : Object.assign({}, COMMON0, SYS[k].p, { losses: state.p.losses, kHeat: state.p.kHeat, accessori: state.p.accessori });
+    const r = compute(p, inp, false);
+    return { k, r };
+  });
+  let h = '<tr><th>Sistema</th><th class="n">PUE</th><th class="n">WUE (L/kWh)</th><th class="n">Acqua diretta m³</th><th class="n">Acqua indiretta m³</th><th class="n">Impronta L/kWh</th><th class="n">Energia GWh</th><th>Calore</th></tr>';
+  for (const { k, r } of rows) {
+    h += `<tr class="${k === state.sysKey ? 'sel' : ''}"><td>${SYS[k].short}</td><td class="n">${fmt2(r.pue)} ${badge(classPUE(r.pue))}</td><td class="n">${fmt3(r.wue)} ${badge(classWUE(r.wue))}</td><td class="n">${fmt(r.waterM3)}</td><td class="n">${fmt(r.indirM3)}</td><td class="n">${fmt2(r.footprint)}</td><td class="n">${fmt(r.totMWh / 1000, 1)}</td><td>${SYS[k].heatT}</td></tr>`;
+  }
+  $('cmp').innerHTML = h;
+}
+
+function renderChecks() {
+  const sd = 2.5, n = 10, M = CLIMI.milano;
+  const aws = simulateMulti(Object.assign({}, COMMON0, SYS.diretta.p, { itMW: 79, load: 1 }), M, sd, n);
+  const msP = Object.assign({}, COMMON0, { sys: 'direct', tSwitch: 29.4, tSup: 27, eps: 0.85, dTair: 12, coc: 3.5, fan: 0.03 });
+  const ms = simulateMulti(Object.assign({}, msP, { itMW: 10, load: 1 }), M, sd, n);
+  const msHours = hoursAbove(M, sd, n, 29.4);
+  const mgAdia29 = simulateMulti(Object.assign({}, COMMON0, SYS.aria_adiab.p, { tSwitch: 29, itMW: 240, load: 1 }), M, sd, n);
+  const mgHyb = simulateMulti(Object.assign({}, COMMON0, SYS.torri.p, { tDry: 25, itMW: 240, load: 1 }), M, sd, n);
+  const mgHyb26 = simulateMulti(Object.assign({}, COMMON0, SYS.torri.p, { tDry: 26, itMW: 240, load: 1 }), M, sd, n);
+  const mgDry = simulateMulti(Object.assign({}, COMMON0, SYS.aria_dry.p, { itMW: 240, load: 1 }), M, sd, n);
+  const g = gridFactor(MIX0, F0, false), gh = gridFactor(MIX0, F0, true);
+  const dev = (a, b) => Math.abs(a - b) / b;
+  const pill = ok => ok ? '<span class="pill ok">Torna</span>' : '<span class="pill warn">Non torna con i valori tipici</span>';
+  $('checks').innerHTML = `
+  <div class="check"><span class="eyebrow">Progetto reale · Milano</span><h3>AWS Rho-Pero, 79 MW IT</h3>
+    ${pill(dev(aws.waterM3, 50000) < 0.2)}
+    <div class="vs"><span>Acqua dichiarata in VIA</span><b>50.000 m³/anno</b><span>Modello (aria diretta, carico pieno)</span><b>${fmt(aws.waterM3)} m³</b><span>Forbice tra anni</span><b>${fmt(aws.waterMin)}–${fmt(aws.waterMax)}</b><span>PUE dichiarato / modello</span><b>1,08 / ${fmt2(aws.pue)}</b></div>
+    <p class="note">Free cooling quasi tutto l'anno, evaporativo solo d'estate, ricircolo circa 2,7 volte. Il modello ci arriva con acqua attiva sopra 28 °C e aria di mandata a 24 °C: soglie scelte per tarare il modello, da confermare sui documenti VIA. Il PUE torna per costruzione (perdite 5% + ventilatori 3%), non è una prova indipendente. <a href="https://piurho.it/approfondimenti/data-center/data-center-cosa-dove/" target="_blank" rel="noopener">Fonte</a></p></div>
+  <div class="check"><span class="eyebrow">Regola dichiarata · Milano</span><h3>Microsoft, evaporativo diretto</h3>
+    ${pill(msHours / 8760 < 0.05 && Math.abs(ms.wue - 0.03) < 0.02)}
+    <div class="vs"><span>Acqua usata (dichiarato)</span><b>&lt; 5% dell'anno</b><span>Ore sopra 29,4 °C nel modello</span><b>${fmt(msHours)} h (${fmt(msHours / 87.6, 1)}%)</b><span>WUE Microsoft EMEA FY25</span><b>0,03 L/kWh</b><span>WUE modello</span><b>${fmt3(ms.wue)} L/kWh</b></div>
+    <p class="note">Microsoft dice di usare acqua solo sopra 29,4 °C (85 °F). Il WUE 0,03 è la media di tutta l'area EMEA, non solo di Milano: è un controllo di plausibilità. <a href="https://local.microsoft.com/wp-content/uploads/2025/10/Microsoft-datacenters-in-Italy-LOCALIZED.pdf" target="_blank" rel="noopener">Fonte</a> · <a href="https://datacenters.microsoft.com/sustainability/efficiency/" target="_blank" rel="noopener">WUE</a></p></div>
+  <div class="check"><span class="eyebrow">Studio di Impatto Ambientale · Magenta (dic. 2025)</span><h3>Campus MXP Magenta, 240 MW IT</h3>
+    ${pill(Math.abs(mgHyb.waterM3 - 500000) / 500000 < 0.2 && Math.abs(mgAdia29.waterM3 - 200000) / 200000 < 0.2)}
+    <div class="vs"><span>PUE annuo obiettivo (SIA) / modello</span><b>1,25 / ${fmt2(mgDry.pue)}</b><span>PUE di picco (SIA) / ora peggiore modello</span><b>1,50 / ${fmt2(mgDry.pueHourMax)}</b><span>Scartato: hybrid cooler (SIA)</span><b>~500.000 m³</b><span>Modello: bagnato sopra 25–26 °C</span><b>${fmt(mgHyb26.waterM3)}–${fmt(mgHyb.waterM3)} m³</b><span>Scartato: adiabatico (SIA)</span><b>~200.000 m³</b><span>Modello: acqua sopra 29 °C</span><b>${fmt(mgAdia29.waterM3)} m³</b><span>Scelto: chiller ad aria, circuito chiuso</span><b>2.600–13.025 m³ (usi civili)</b><span>Acqua indiretta: energia SIA a PUE 1,25</span><b>${fmt(240 * 1.25 * 8760 * g.factor)} m³</b></div>
+    <p class="note">Le tre soluzioni valutate nello studio tornano con soglie ragionevoli. Il PUE del modello è più ottimista dell'obiettivo dichiarato (1,25), che lo SIA indica come da confermare dopo la scelta finale delle macchine. La relazione CO₂ usa 3.153,6 GWh, cioè il PUE di picco 1,5 per tutte le ore: un 20% in più del suo stesso obiettivo annuo. Nello SIA il consumo d'acqua civile compare in due versioni (2.600 m³/anno in un capitolo, 13.025 in un altro). Riuso del calore: solo predisposto, a Magenta non c'è una rete di teleriscaldamento.</p></div>
+  <div class="check"><span class="eyebrow">Riferimenti UE e rete italiana</span><h3>Medie dichiarate nel 2024</h3>
+    <div class="vs"><span>PUE medio UE (681 siti)</span><b>1,36</b><span>WUE medio UE (458 siti)</span><b>0,58 L/kWh</b><span>WUE campione italiano (dato riportato dalla stampa)</span><b>0,70 L/kWh</b><span>Acqua per kWh rete Italia 2025</span><b>${fmt2(g.factor)} L/kWh</b><span>…con evaporazione bacini</span><b>${fmt2(gh.factor)} L/kWh</b></div>
+    <p class="note">Con l'acqua delle centrali, anche un data center che non usa acqua in sito ha un'impronta di circa ${fmt2(g.factor * 1.16)} L/kWh IT con PUE 1,16. <a href="https://energy.ec.europa.eu/document/download/8a87a5fe-0260-462a-b165-09f1496d1aa0_en?filename=COM_2026_500_1_EN_ACT_part1_v4.pdf" target="_blank" rel="noopener">COM(2026) 500</a> · <a href="https://www.paeseitaliapress.it/ambiente/2026/11/14/il-prezzo-della-nuvola-3-acqua-data-center-consumi/" target="_blank" rel="noopener">dato Italia</a></p></div>`;
+}
+
+function summaryText() {
+  const { inp, r } = last;
+  const siteName = $('site').selectedOptions[0].textContent;
+  return [
+    `Passaporto Acqua e Calore – ${inp.name}`,
+    `Sito/clima: ${siteName} · Potenza IT: ${fmt(inp.itMW, 1)} MW · Carico medio: ${fmt(inp.load * 100)}%`,
+    `Raffreddamento: ${SYS[state.sysKey].name}`,
+    ...(r.useDecl ? [`Energia dichiarata: ${fmt(inp.eDecl, 1)} GWh/anno → PUE implicito ${fmt2(r.pueImpl)} (classe ${classPUE(r.pueImpl)})`] : []),
+    `Energia IT: ${fmt(r.itMWh / 1000, 1)} GWh/anno · Energia totale: ${fmt(r.totMWh / 1000, 1)} GWh/anno`,
+    `PUE: ${fmt2(r.pue)} (classe ${classPUE(r.pue)}) · WUE: ${fmt3(r.wue)} L/kWh (classe ${classWUE(r.wue)})`,
+    `Acqua diretta: ${fmt(r.waterM3)} m³/anno (forbice ${fmt(r.waterMin)}–${fmt(r.waterMax)})`,
+    `Acqua indiretta (centrali, ${fmt2(r.gridF)} L/kWh): ${fmt(r.indirM3)} m³/anno`,
+    `Impronta idrica completa: ${fmt2(r.footprint)} L/kWh IT (${fmt(r.indShare * 100)}% dalle centrali)`,
+    `Calore di scarto: ${fmt(r.heatMWh / 1000, 1)} GWh termici/anno, ${SYS[state.sysKey].heatT} (indicativo)`,
+    `Stima preliminare su ${inp.years} anni climatici sintetici da medie 1991–2020. Da validare con dati dei costruttori.`,
+  ].join('\n');
+}
+
+$('btn-copy').addEventListener('click', () => {
+  const t = summaryText();
+  const fb = () => { const ta = $('summary-fallback'); ta.hidden = false; ta.value = t; ta.focus(); ta.select(); $('copy-status').textContent = 'Seleziona e copia il testo qui sotto.'; };
+  try {
+    navigator.clipboard.writeText(t).then(() => { $('copy-status').textContent = 'Riepilogo copiato.'; }, fb);
+  } catch (e) { fb(); }
+});
+
+$('sys').addEventListener('change', () => { loadPreset($('sys').value); renderAdv(); run(); });
+$('site').addEventListener('change', () => {
+  const v = $('site').value;
+  if (v !== 'custom') { state.clima = JSON.parse(JSON.stringify(CLIMI[v])); renderClima(); }
+  run();
+});
+['prj-name', 'it-mw', 'load', 'pv', 'e-decl', 'hydro-evap', 'sd', 'years'].forEach(id => $(id).addEventListener('input', schedule));
+$('hydro-evap').addEventListener('change', schedule);
+
+const TUSCIA = { name: 'Esempio: data center 5 MW, area Civita Castellana', site: 'viterbo', itMW: 5, load: 70, sys: 'aria_adiab', pv: 5,
+  tag: 'Esempio ipotetico · Tuscia 5 MW' };
+const AWS = { name: 'AWS Rho-Pero (Milano) – dati VIA', site: 'milano', itMW: 79, load: 100, sys: 'diretta', pv: 0,
+  tag: 'Caso reale · AWS Rho-Pero 79 MW' };
+const MAGENTA = { name: 'MXP Magenta (Namira SGR) – Studio di Impatto Ambientale dic. 2025', site: 'milano', itMW: 240, load: 100, sys: 'aria_dry', pv: 0, eDecl: 3153.6, overrides: { accessori: 0.0062 },
+  tag: 'Caso reale · Magenta, dati SIA' };
+$('btn-tuscia').addEventListener('click', () => setProject(TUSCIA));
+$('btn-magenta').addEventListener('click', () => setProject(MAGENTA));
+$('btn-aws').addEventListener('click', () => setProject(AWS));
+
+setProject(TUSCIA);
+renderChecks();
+</script>
