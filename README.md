@@ -11,6 +11,8 @@ Strumento locale per la **prefattibilità di un terreno per un data center**. Si
 
 Un esempio completo sul caso reale di Magenta (ex Novaceta) è in `esempi/scheda_magenta_ex_novaceta.pdf`.
 
+**Per provarlo senza installare nulla:** apri `esempi/demo_passaporto_magenta.html` con un doppio clic (versione dimostrativa con il caso Magenta registrato; serve internet solo per lo sfondo della mappa).
+
 ## Installazione (una volta sola)
 Servono **Python 3.10 o successivo** e una connessione internet. Dalla cartella del progetto:
 
