@@ -134,6 +134,8 @@ def pagina():
 
 @app.get("/{nome}.js")
 def script(nome: str):
+    if nome == "scheda":
+        return FileResponse(ROOT / "frontend" / "scheda.js", media_type="text/javascript")
     if nome not in {"engine", "dati", "casi"}:
         raise HTTPException(status_code=404)
     return FileResponse(ROOT / f"{nome}.js", media_type="text/javascript")

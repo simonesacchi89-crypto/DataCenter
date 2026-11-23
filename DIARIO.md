@@ -179,3 +179,29 @@ I dati pubblicati si leggono come **valori da anno caldo** (2006, 2015 e 2022 so
 3. Soglie da tarare: Natura 2000 (1 km), vincoli (i pareri della Soprintendenza non sono nei dati).
 4. Dati Natura 2000 del Geoportale con date di aggiornamento vecchie: confrontare con lo shapefile MASE dicembre 2025.
 5. IdroGEO controlla un cerchio che contiene il lotto, non il poligono esatto: va bene per la prefattibilità, da dire nella scheda (lo dice già la nota).
+
+## 23 novembre 2026 – Fase 4: scheda e domande
+
+### Cosa è stato fatto
+- Pagina organizzata in **4 passi** con una barra in alto che segna "fatto / da fare": 1 Il sito → 2 Il progetto → 3 Controlli → 4 Scheda.
+- `frontend/scheda.js`: genera la **scheda di prefattibilità** in HTML stampabile:
+  - disclaimer di CLAUDE.md in apertura e in chiusura;
+  - riepilogo dei semafori;
+  - sito: comune, particelle, superficie, centro, disegno del lotto con scala;
+  - ipotesi di progetto e tabella dei 14 criteri con fonte, data dei dati e data di consultazione;
+  - energia, acqua (diretta con forbice, indiretta, impronta) e calore;
+  - **domande da fare raggruppate per destinatario** (Comune, Terna, ARPA, Soprintendenza, Autorità di distretto, Regione, Progettista), generate solo dai criteri gialli, rossi e grigi;
+  - limiti di SPEC §8 e fonti.
+- Esportazione: "Scarica HTML" e "Stampa / Salva PDF" (stampa del browser, niente da installare).
+- Esempio completo del caso reale in `esempi/scheda_magenta_ex_novaceta.html` e `.pdf` (5 pagine A4).
+- Test: `tests/scheda.test.js` (disclaimer due volte, domande solo da gialli/rossi/grigi, raggruppamento, nessun testo HTML non protetto, fonti e numeri presenti).
+
+### Esito sul caso Magenta (con scelte manuali coerenti con lo SIA)
+7 verdi, 3 gialli, 1 rosso (siti contaminati), 2 da verificare (rete AT e vicini: Overpass), 1 informativo (teleriscaldamento). 6 domande a 5 interlocutori.
+
+### Cosa resta aperto
+1. Criteri 8 e 10: provare Overpass dal computer di Simone.
+2. La scheda non si aggiorna da sola se dopo cambi lotto o controlli: va ripreparata (il pulsante lo fa in un attimo).
+3. Il disegno del lotto non ha lo sfondo cartografico (scelta voluta: funziona offline e in stampa, senza dipendere da servizi esterni).
+4. Per SPEC le domande nascono solo da gialli, rossi e grigi: a Magenta la domanda alla Soprintendenza non compare perché i vincoli risultano verdi nei dati pubblici. Valutare se tenerla sempre.
+5. Fase 5 (foto) e le estensioni discusse (ricerca di siti in un'area, seguito dopo la scheda) da decidere.

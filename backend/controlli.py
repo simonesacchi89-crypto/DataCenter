@@ -317,7 +317,8 @@ def c8_c10_osm(lotto: Lotto):
         msg = (f"{ex}. Overpass non ha risposto (da questo ambiente cloud è bloccato o sovraccarico): "
                "riprovare più tardi o dal computer locale.")
         return [grigio(8, "Distanza dalla rete ad alta tensione", fonte, url, msg, domanda8),
-                grigio(10, "Vicini sensibili", fonte, url, msg)]
+                grigio(10, "Vicini sensibili", fonte, url, msg,
+                       "Verificare con il Comune se entro 500 m ci sono abitazioni ed entro 200 m scuole o ospedali.")]
     data = (d.get("osm3s") or {}).get("timestamp_osm_base")
     linee, stazioni, sens, abit = [], [], [], []
     for el in d.get("elements", []):

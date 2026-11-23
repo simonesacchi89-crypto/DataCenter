@@ -116,6 +116,15 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
   .tbl-crit select { font-size: 12px; min-width: 190px; max-width: 100%; }
   .tbl-crit .fonte { font-size: 12px; color: var(--muted); }
   .sem.info { background: var(--water); }
+  .passi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0 0 16px; }
+  .passi a { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg); text-decoration: none; font-size: 14px; }
+  .passi b { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); font-size: 13px; }
+  .passi i { margin-left: auto; font-style: normal; font-size: 12px; color: var(--muted); }
+  .passi a.fatto b { background: var(--cA); color: #fff; }
+  .passi a.fatto i::after { content: "fatto"; }
+  .passi a:not(.fatto) i::after { content: "da fare"; }
+  @media (max-width: 640px) { .passi { grid-template-columns: repeat(2, 1fr); } .passi i { display: none; } }
+  #scheda-anteprima { width: 100%; height: 640px; border: 1px solid var(--line); border-radius: 6px; margin-top: 10px; background: #fff; }
   .sem.verde { background: var(--cA); } .sem.giallo { background: var(--cD); color: #222; } .sem.rosso { background: var(--cG); } .sem.grigio { background: var(--muted); }
   .tbl-reali { width: 100%; border-collapse: collapse; font-size: 13px; }
   .tbl-reali th, .tbl-reali td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -131,15 +140,22 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
     <div>
       <div class="eyebrow">Calcolatore preliminare · data center</div>
       <h1>Passaporto <span class="drop">Acqua</span> e <span class="fire">Calore</span></h1>
-      <p class="lede">Stima energia, acqua consumata in sito e acqua consumata dalle centrali elettriche che alimentano un data center, ora per ora su un anno climatico tipo. Classi secondo la bozza dell'etichetta UE (A–G).</p>
+      <p class="lede">Prefattibilità di un terreno per un data center in quattro passi: il sito, il progetto, i controlli sulle fonti pubbliche e la scheda con le domande da fare. Energia, acqua e calore ora per ora sul clima del sito, con le classi della bozza di etichetta UE (A–G).</p>
     </div>
     <span class="tag" id="loaded-tag">Esempio caricato</span>
   </header>
 
+  <nav class="passi" aria-label="Passi">
+    <a href="#sito" id="pa-1"><b>1</b><span>Il sito</span><i></i></a>
+    <a href="#passo2" id="pa-2"><b>2</b><span>Il progetto</span><i></i></a>
+    <a href="#controlli" id="pa-3"><b>3</b><span>Controlli</span><i></i></a>
+    <a href="#scheda" id="pa-4"><b>4</b><span>Scheda</span><i></i></a>
+  </nav>
+
   <div class="grid">
-    <aside class="panel" aria-label="Dati del progetto">
+    <aside class="panel" aria-label="Dati del progetto" id="passo2">
       <div>
-        <div class="eyebrow">Progetto</div>
+        <div class="eyebrow">Passo 2 · Il progetto</div>
         <div class="btns" style="margin-top:8px">
           <button type="button" id="btn-tuscia">Esempio Tuscia 5 MW</button>
           <button type="button" id="btn-aws">Caso reale: AWS Rho-Pero</button>
@@ -211,6 +227,7 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
 
     <main>
       <section class="card" id="sito">
+        <span class="eyebrow">Passo 1</span>
         <h2>Il sito</h2>
         <p class="note">Cerca per comune, foglio e particelle, oppure clicca sulla mappa per aggiungere o togliere particelle. Da vicino compaiono i confini catastali.</p>
         <form class="sito-form" id="sito-form">
@@ -228,11 +245,25 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
       </section>
 
       <section class="card" id="controlli">
+        <span class="eyebrow">Passo 3</span>
         <h2>Controlli sul sito</h2>
         <p class="note">Criteri di SPEC §4 sulle particelle scelte. Grigio = da verificare: la fonte non risponde, non copre l'area o il dato va inserito a mano. Le soglie sono ipotesi iniziali da tarare.</p>
         <div class="btns"><button type="button" id="btn-controlli">Esegui i controlli sul lotto</button></div>
         <span class="hint" id="controlli-status" aria-live="polite">Scegli prima le particelle nella sezione "Il sito".</span>
         <div class="tbl-wrap"><table class="tbl-crit" id="tbl-crit"></table></div>
+      </section>
+
+      <section class="card" id="scheda">
+        <span class="eyebrow">Passo 4</span>
+        <h2>Scheda di prefattibilità</h2>
+        <p class="note">Riassume sito, progetto, i 14 criteri con fonte e data, energia e acqua, e le domande da fare a Comune, Terna, ARPA e Soprintendenza. Si può scaricare in HTML o stampare e salvare in PDF.</p>
+        <div class="btns">
+          <button type="button" id="btn-scheda">Prepara la scheda</button>
+          <button type="button" id="btn-scheda-html" disabled>Scarica HTML</button>
+          <button type="button" id="btn-scheda-pdf" disabled>Stampa / Salva PDF</button>
+        </div>
+        <span class="hint" id="scheda-status" aria-live="polite"></span>
+        <iframe id="scheda-anteprima" title="Anteprima della scheda" hidden></iframe>
       </section>
 
       <section class="kpis" id="kpis" aria-live="polite"></section>
@@ -295,6 +326,7 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
 <script src="engine.js"></script>
 <script src="dati.js"></script>
 <script src="casi.js"></script>
+<script src="scheda.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 
@@ -446,6 +478,7 @@ function run() {
   drawChart(r.months);
   renderCompare(inp);
   if (typeof renderControlli === 'function' && $('tbl-crit')) renderControlli();
+  if (typeof aggiornaPassi === 'function') aggiornaPassi();
 }
 
 function drawChart(months) {
@@ -700,6 +733,7 @@ function disegnaSito(zoom = false) {
     $('lat').value = c.lat.toFixed(3); $('lon').value = c.lng.toFixed(3);
   }
   if ($('tbl-crit')) renderControlli();
+  aggiornaPassi();
 }
 
 // ---------------- Controlli sul sito (Fase 3) ----------------
@@ -742,7 +776,7 @@ async function eseguiControlli() {
   } catch (e) {
     $('controlli-status').className = 'hint warn-txt';
     $('controlli-status').textContent = 'Controlli non eseguiti: ' + (e instanceof TypeError ? 'il programma locale non risponde' : e.message);
-  } finally { ctrl.inCorso = false; $('btn-controlli').disabled = false; renderControlli(); }
+  } finally { ctrl.inCorso = false; $('btn-controlli').disabled = false; renderControlli(); aggiornaPassi(); }
 }
 
 function rigaCriteri() {
@@ -799,6 +833,60 @@ function renderControlli() {
   }));
 }
 
+// ---------------- Passi e scheda (Fase 4) ----------------
+const schedaStato = { html: null };
+function aggiornaPassi() {
+  if (!$('pa-1')) return;
+  $('pa-1').classList.toggle('fatto', sito.scelte.size > 0);
+  $('pa-2').classList.toggle('fatto', !!last && (parseFloat($('it-mw').value) || 0) > 0);
+  $('pa-3').classList.toggle('fatto', !!ctrl.auto);
+  $('pa-4').classList.toggle('fatto', !!schedaStato.html);
+}
+
+function datiScheda() {
+  const { inp, r } = last;
+  const lista = [...sito.scelte.values()];
+  const tot = lista.reduce((a, p) => a + p.superficie_m2, 0);
+  const centro = lista.length ? sito.strSel.getBounds().getCenter() : null;
+  const comune = (ctrl.auto && ctrl.auto.comune) || (sito.meta && sito.meta.comune) || null;
+  return {
+    data: new Date().toISOString(),
+    progetto: { nome: inp.name, itMW: inp.itMW, carico: inp.load, sistema: SYS[state.sysKey].name, clima: climaFonte(inp),
+      energiaDichiarata: inp.eDecl || null },
+    sito: { comune: comune ? `${comune.nome} (${comune.sigla}) – codice catastale ${comune.codice_catastale}` : (lista[0] ? 'codice catastale ' + lista[0].codice_comune : ''),
+      particelle: lista, superficie_m2: tot, centro: centro ? { lat: centro.lat, lon: centro.lng } : null,
+      fonte: sito.meta ? `${sito.meta.fonte}, ${sito.meta.licenza}` : '', consultato_il: sito.meta ? sito.meta.consultato_il : null,
+      aggiornato: [...new Set(lista.map(p => p.foglio_aggiornato_al).filter(Boolean))].join(', ') },
+    criteri: rigaCriteri().map(c => Object.assign({}, c, { nome: NOMI_CRIT[c.id] })),
+    calcolo: { pue: r.pue, classePUE: classPUE(r.pue), pueMin: r.pueMin, pueMax: r.pueMax, pueOraPeggiore: r.pueHourMax,
+      wue: r.wue, classeWUE: classWUE(r.wue), itGWh: r.itMWh / 1000, totGWh: r.totMWh / 1000, acquaM3: r.waterM3,
+      acquaMin: r.waterMin, acquaMax: r.waterMax, indirettaM3: r.indirM3, fattoreRete: r.gridF, impronta: r.footprint,
+      quotaIndiretta: r.indShare, caloreGWh: r.heatMWh / 1000, temperaturaCalore: SYS[state.sysKey].heatT },
+  };
+}
+
+function initScheda() {
+  $('btn-scheda').addEventListener('click', () => {
+    const avvisi = [];
+    if (!sito.scelte.size) avvisi.push('nessuna particella scelta');
+    if (!ctrl.auto) avvisi.push('controlli non eseguiti (i criteri automatici risultano da verificare)');
+    schedaStato.html = costruisciScheda(datiScheda());
+    const fr = $('scheda-anteprima'); fr.hidden = false; fr.srcdoc = schedaStato.html;
+    $('btn-scheda-html').disabled = $('btn-scheda-pdf').disabled = false;
+    $('scheda-status').className = 'hint' + (avvisi.length ? ' warn-txt' : ' ok-txt');
+    $('scheda-status').textContent = avvisi.length ? 'Scheda preparata, ma: ' + avvisi.join('; ') + '.' : 'Scheda preparata. Rileggila e poi scaricala o stampala.';
+    aggiornaPassi();
+  });
+  $('btn-scheda-html').addEventListener('click', () => {
+    const nome = ($('prj-name').value.trim() || 'scheda').replace(/[^\w\- ]+/g, '').replace(/\s+/g, '_').slice(0, 60);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([schedaStato.html], { type: 'text/html' }));
+    a.download = `scheda_prefattibilita_${nome}.html`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $('btn-scheda-pdf').addEventListener('click', () => { const w = $('scheda-anteprima').contentWindow; w.focus(); w.print(); });
+  aggiornaPassi();
+}
+
 function summaryText() {
   const { inp, r } = last;
   const siteName = $('site').selectedOptions[0].textContent;
@@ -853,4 +941,5 @@ renderChecks();
 renderChecksReali();
 initMappa();
 initControlli();
+initScheda();
 </script>
