@@ -205,3 +205,25 @@ I dati pubblicati si leggono come **valori da anno caldo** (2006, 2015 e 2022 so
 3. Il disegno del lotto non ha lo sfondo cartografico (scelta voluta: funziona offline e in stampa, senza dipendere da servizi esterni).
 4. Per SPEC le domande nascono solo da gialli, rossi e grigi: a Magenta la domanda alla Soprintendenza non compare perché i vincoli risultano verdi nei dati pubblici. Valutare se tenerla sempre.
 5. Fase 5 (foto) e le estensioni discusse (ricerca di siti in un'area, seguito dopo la scheda) da decidere.
+
+## 23 novembre 2026 – Fase 5: foto e stato del sito
+
+### Decisione
+Simone ha scelto di **non usare servizi di intelligenza artificiale a pagamento**: niente descrizione automatica delle foto. Le note sullo stato del sito si scrivono a mano. Se in futuro si vorrà, la descrizione automatica si può aggiungere con l'API di Claude (servono un account e una chiave; costo indicativo di pochi centesimi per immagine).
+
+### Cosa è stato fatto
+- `backend/ortofoto.py` e `GET /api/ortofoto`: foto aerea ufficiale del lotto (Geoportale Nazionale, ortofoto 2012, 2006, 2000) con le **date vere del volo**, in cache.
+- Pagina, nuova sezione **"Stato del sito: foto e note"** (passo 3, nota e non semaforo):
+  - foto aerea con il confine delle particelle sovrapposto;
+  - caricamento di foto del computer (ridotte nel browser e mai inviate a servizi esterni), con didascalia e "fonte e data" modificabili;
+  - pulsante "Carica le foto di esempio (Magenta)";
+  - 5 note: edifici, coperture (con richiamo all'amianto da verificare), alberi e verde, accessi, altro.
+- Scheda: sezione **"Stato del sito (nota, non semaforo)"** con foto aerea e confine, note e foto con didascalie e fonti. Un test verifica che non aggiunga semafori.
+- **Foto di esempio** in `esempi/foto_demo/`: 4 ortofoto reali del lotto ex Novaceta (2012 vista d'insieme, 2012 dettaglio capannoni, 2007, 1999), con `LEGGIMI.md` e `foto.json` (fonte, data del volo, condizioni d'uso). Non sono foto da terra: non sono state inventate immagini.
+- Esempio di scheda aggiornato: `esempi/scheda_magenta_ex_novaceta.pdf` (7 pagine).
+- `README.md` con le istruzioni di installazione e prova.
+
+### Cosa resta aperto
+1. La foto aerea più recente disponibile a livello nazionale è del **2012**: per lo stato attuale servono foto recenti, un sopralluogo o un'ortofoto regionale più recente (da verificare come fonte).
+2. Foto libere da terra (Wikimedia Commons): non raggiungibili da questo ambiente, da riprovare in locale.
+3. Descrizione automatica delle foto: non attiva per scelta (vedi Decisione).

@@ -124,6 +124,18 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
   .passi a.fatto i::after { content: "fatto"; }
   .passi a:not(.fatto) i::after { content: "da fare"; }
   @media (max-width: 640px) { .passi { grid-template-columns: repeat(2, 1fr); } .passi i { display: none; } }
+  .orto-box { position: relative; max-width: 720px; } .orto-box img { width: 100%; display: block; border-radius: 6px; }
+  #orto-svg { position: absolute; inset: 0; } #orto-svg svg { width: 100%; height: 100%; }
+  h3.sub { font-size: 15px; margin: 16px 0 6px; }
+  #orto-anno { width: auto; }
+  .file-btn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; background: var(--surface-2); font-size: 14px; }
+  .file-btn input { display: none; }
+  .foto-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 8px; }
+  .foto-lista figure { margin: 0; border: 1px solid var(--line); border-radius: 6px; padding: 6px; background: var(--surface); }
+  .foto-lista img { width: 100%; height: 150px; object-fit: cover; border-radius: 4px; }
+  .foto-lista input { width: 100%; font-size: 12px; margin-top: 4px; }
+  .note-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
+  .note-grid textarea { width: 100%; min-height: 60px; font: inherit; font-size: 13px; }
   #scheda-anteprima { width: 100%; height: 640px; border: 1px solid var(--line); border-radius: 6px; margin-top: 10px; background: #fff; }
   .sem.verde { background: var(--cA); } .sem.giallo { background: var(--cD); color: #222; } .sem.rosso { background: var(--cG); } .sem.grigio { background: var(--muted); }
   .tbl-reali { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -251,6 +263,27 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
         <div class="btns"><button type="button" id="btn-controlli">Esegui i controlli sul lotto</button></div>
         <span class="hint" id="controlli-status" aria-live="polite">Scegli prima le particelle nella sezione "Il sito".</span>
         <div class="tbl-wrap"><table class="tbl-crit" id="tbl-crit"></table></div>
+      </section>
+
+      <section class="card" id="stato-sito">
+        <span class="eyebrow">Passo 3 · nota, non semaforo</span>
+        <h2>Stato del sito: foto e note</h2>
+        <p class="note">Foto aerea ufficiale del lotto, foto tue e note su edifici, coperture, alberi e accessi. Finiscono nella scheda come <b>nota</b>: non cambiano nessun semaforo.</p>
+        <div class="btns">
+          <select id="orto-anno" aria-label="Anno della foto aerea"><option value="2012">Foto aerea 2012</option><option value="2006">Foto aerea 2006</option><option value="2000">Foto aerea 2000</option></select>
+          <button type="button" id="btn-orto">Mostra la foto aerea del lotto</button>
+        </div>
+        <span class="hint" id="orto-status" aria-live="polite"></span>
+        <figure id="orto-fig" hidden><div class="orto-box"><img id="orto-img" alt="Foto aerea del lotto"><div id="orto-svg"></div></div><figcaption class="hint" id="orto-cap"></figcaption></figure>
+        <h3 class="sub">Foto del sito</h3>
+        <div class="btns">
+          <label class="file-btn"><input type="file" id="foto-input" accept="image/*" multiple> Aggiungi foto</label>
+          <button type="button" id="btn-foto-demo">Carica le foto di esempio (Magenta)</button>
+        </div>
+        <span class="hint" id="foto-status" aria-live="polite">Le foto restano sul tuo computer: non vengono inviate a nessun servizio.</span>
+        <div id="foto-lista" class="foto-lista"></div>
+        <h3 class="sub">Note sullo stato del sito</h3>
+        <div class="note-grid" id="note-sito"></div>
       </section>
 
       <section class="card" id="scheda">
@@ -833,6 +866,93 @@ function renderControlli() {
   }));
 }
 
+// ---------------- Stato del sito: foto e note (Fase 5) ----------------
+const statoSito = { aerea: null, foto: [], note: {} };
+const CAMPI_NOTE = [
+  ['edifici', 'Edifici esistenti', 'numero, dimensioni, stato, demolizioni necessarie'],
+  ['coperture', 'Coperture', 'tipologia e stato; segnalare possibili lastre in cemento-amianto (da verificare con analisi)'],
+  ['verde', 'Alberi e verde', 'filari, boschi, alberature da tutelare'],
+  ['accessi', 'Accessi', 'strade, ingressi, accesso per mezzi pesanti, ferrovia'],
+  ['altro', 'Altro', 'serbatoi, linee elettriche visibili, depositi, segni di contaminazione…'],
+];
+
+function initStatoSito() {
+  $('note-sito').innerHTML = CAMPI_NOTE.map(([k, l, ph]) =>
+    `<div class="field"><label for="nota-${k}">${l}</label><textarea id="nota-${k}" data-k="${k}" placeholder="${ph}"></textarea></div>`).join('');
+  $('note-sito').querySelectorAll('textarea').forEach(t => t.addEventListener('input', () => { statoSito.note[t.dataset.k] = t.value; }));
+  $('btn-orto').addEventListener('click', caricaOrtofoto);
+  $('foto-input').addEventListener('change', async ev => {
+    for (const f of ev.target.files) {
+      try { statoSito.foto.push({ src: await riduciImmagine(f), didascalia: f.name.replace(/\.[^.]+$/, ''), fonte: 'foto caricata dall\'utente – data da indicare' }); }
+      catch (e) { $('foto-status').textContent = `Non riesco a leggere ${f.name}.`; }
+    }
+    ev.target.value = ''; disegnaFoto();
+  });
+  $('btn-foto-demo').addEventListener('click', caricaFotoDemo);
+}
+
+function riduciImmagine(file, maxLato = 1600) {
+  return new Promise((ok, ko) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, maxLato / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = ko; img.src = url;
+  });
+}
+
+async function caricaFotoDemo() {
+  $('foto-status').textContent = 'Carico le foto di esempio…';
+  try {
+    const meta = await api('/esempi/foto_demo/foto.json');
+    for (const m of meta) {
+      const blob = await (await fetch('/esempi/foto_demo/' + m.file)).blob();
+      const src = await new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(blob); });
+      statoSito.foto.push({ src, didascalia: m.didascalia, fonte: `${m.fonte} · ${m.data}` });
+    }
+    $('foto-status').textContent = 'Foto di esempio caricate: sono ortofoto ufficiali (2012, 2007, 1999), non foto da terra.';
+    if (!statoSito.note.coperture) {
+      // esempio di nota scritta a mano, modificabile
+      $('nota-coperture').value = statoSito.note.coperture = 'Esempio: dalle foto aeree del 2012 coperture a shed su gran parte dei capannoni; materiale da verificare (possibile cemento-amianto).';
+    }
+  } catch (e) { $('foto-status').textContent = 'Foto di esempio non disponibili: ' + e.message; }
+  disegnaFoto();
+}
+
+function disegnaFoto() {
+  const esc = t => String(t ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  $('foto-lista').innerHTML = statoSito.foto.map((f, i) => `<figure><img src="${f.src}" alt="${esc(f.didascalia)}">
+    <input type="text" data-i="${i}" data-k="didascalia" value="${esc(f.didascalia)}" aria-label="Didascalia">
+    <input type="text" data-i="${i}" data-k="fonte" value="${esc(f.fonte)}" aria-label="Fonte e data">
+    <button type="button" data-i="${i}">togli</button></figure>`).join('');
+  $('foto-lista').querySelectorAll('input').forEach(el => el.addEventListener('input', () => { statoSito.foto[el.dataset.i][el.dataset.k] = el.value; }));
+  $('foto-lista').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { statoSito.foto.splice(+b.dataset.i, 1); disegnaFoto(); }));
+}
+
+async function caricaOrtofoto() {
+  const lista = [...sito.scelte.values()];
+  if (!lista.length) { $('orto-status').textContent = 'Scegli prima le particelle nel passo 1.'; return; }
+  const b = sito.strSel.getBounds().pad(0.25);
+  $('orto-status').className = 'hint'; $('orto-status').textContent = 'Scarico la foto aerea…';
+  try {
+    const d = await api(`/api/ortofoto?s=${b.getSouth().toFixed(5)}&w=${b.getWest().toFixed(5)}&n=${b.getNorth().toFixed(5)}&e=${b.getEast().toFixed(5)}&anno=${$('orto-anno').value}`);
+    statoSito.aerea = d;
+    $('orto-img').src = d.immagine; $('orto-fig').hidden = false;
+    $('orto-svg').innerHTML = svgSovrapposto(lista, d.riquadro, d.larghezza, d.altezza);
+    $('orto-cap').textContent = `${d.fonte} · volo: ${d.date_volo || d.anno} · in arancione le particelle scelte. ${d.nota}`;
+    $('orto-status').textContent = '';
+  } catch (e) { $('orto-status').className = 'hint warn-txt'; $('orto-status').textContent = 'Foto aerea non disponibile: ' + e.message; }
+}
+
+function datiStatoSito() {
+  const lista = [...sito.scelte.values()];
+  return { aerea: statoSito.aerea ? Object.assign({}, statoSito.aerea, { sovrapposto: svgSovrapposto(lista, statoSito.aerea.riquadro, statoSito.aerea.larghezza, statoSito.aerea.altezza) }) : null,
+    foto: statoSito.foto, note: CAMPI_NOTE.map(([k, l]) => ({ titolo: l, testo: (statoSito.note[k] || '').trim() })).filter(n => n.testo) };
+}
+
 // ---------------- Passi e scheda (Fase 4) ----------------
 const schedaStato = { html: null };
 function aggiornaPassi() {
@@ -858,6 +978,7 @@ function datiScheda() {
       fonte: sito.meta ? `${sito.meta.fonte}, ${sito.meta.licenza}` : '', consultato_il: sito.meta ? sito.meta.consultato_il : null,
       aggiornato: [...new Set(lista.map(p => p.foglio_aggiornato_al).filter(Boolean))].join(', ') },
     criteri: rigaCriteri().map(c => Object.assign({}, c, { nome: NOMI_CRIT[c.id] })),
+    stato_sito: datiStatoSito(),
     calcolo: { pue: r.pue, classePUE: classPUE(r.pue), pueMin: r.pueMin, pueMax: r.pueMax, pueOraPeggiore: r.pueHourMax,
       wue: r.wue, classeWUE: classWUE(r.wue), itGWh: r.itMWh / 1000, totGWh: r.totMWh / 1000, acquaM3: r.waterM3,
       acquaMin: r.waterMin, acquaMax: r.waterMax, indirettaM3: r.indirM3, fattoreRete: r.gridF, impronta: r.footprint,
@@ -941,5 +1062,6 @@ renderChecks();
 renderChecksReali();
 initMappa();
 initControlli();
+initStatoSito();
 initScheda();
 </script>

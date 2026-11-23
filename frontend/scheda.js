@@ -66,6 +66,32 @@ function svgLotto(particelle, W = 520, H = 300) {
   return out;
 }
 
+// Confine delle particelle da sovrapporre a un'immagine WMS in EPSG:4326 (riquadro [s, w, n, e], proporzione lineare)
+function svgSovrapposto(particelle, riquadro, W, H) {
+  const [s, w, n, e] = riquadro;
+  const x = lon => ((lon - w) / (e - w) * W).toFixed(1), y = lat => ((n - lat) / (n - s) * H).toFixed(1);
+  const paths = particelle.map(p => (p.geometry.type === 'Polygon' ? [p.geometry.coordinates] : p.geometry.coordinates)
+    .map(poly => poly.map(r => 'M' + r.map(c => `${x(c[0])},${y(c[1])}`).join('L') + 'Z').join('')).join('')).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="${paths}" fill="none" stroke="#ff7a1a" stroke-width="${Math.max(2, W / 400)}" fill-rule="evenodd"/></svg>`;
+}
+
+function sezioneStatoSito(st) {
+  if (!st || (!st.aerea && !(st.foto || []).length && !(st.note || []).length)) {
+    return '<h2>Stato del sito (nota)</h2><p class="small">Nessuna foto o nota inserita. Consigliato un sopralluogo.</p>';
+  }
+  let h = '<h2>Stato del sito (nota, non semaforo)</h2>';
+  if (st.aerea) {
+    h += `<figure style="margin:6px 0"><div style="position:relative"><img src="${st.aerea.immagine}" alt="Foto aerea del lotto" style="width:100%;display:block">`
+      + `<div style="position:absolute;inset:0">${st.aerea.sovrapposto.replace('<svg ', '<svg style="width:100%;height:100%" ')}</div></div>`
+      + `<figcaption class="small">${esc(st.aerea.fonte)} · volo: ${esc(st.aerea.date_volo || st.aerea.anno)} · in arancione il lotto. ${esc(st.aerea.nota)}</figcaption></figure>`;
+  }
+  if ((st.note || []).length) h += `<div class="kv">${st.note.map(n => `<span>${esc(n.titolo)}</span><span style="color:inherit">${esc(n.testo)}</span>`).join('')}</div><p class="small">Note inserite a mano.</p>`;
+  if ((st.foto || []).length) {
+    h += `<div class="foto">${st.foto.map(f => `<figure><img src="${f.src}" alt="${esc(f.didascalia)}"><figcaption><b>${esc(f.didascalia)}</b><br><span class="small">${esc(f.fonte)}</span></figcaption></figure>`).join('')}</div>`;
+  }
+  return h;
+}
+
 function fmtN(x, d = 0) {
   if (x == null || isNaN(x)) return '–';
   return Number(x).toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: 'always' });
@@ -109,6 +135,8 @@ function costruisciScheda(d) {
   .num { font-family: Consolas, Menlo, monospace; white-space: nowrap; }
   ol.dom { margin: 4px 0 10px 18px; padding: 0; } ol.dom li { margin-bottom: 3px; }
   .lotto { border: 1px solid var(--line); margin: 8px 0; }
+  .foto { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; } .foto figure { margin: 0; break-inside: avoid; } .foto img { width: 100%; display: block; }
+  figure { break-inside: avoid; }
   @media print { body { padding: 0; } h2 { break-after: avoid; } tr, li { break-inside: avoid; } @page { margin: 14mm 12mm; } }
 </style></head>
 <body><main>
@@ -136,6 +164,8 @@ ${conta('rosso') ? `<p><b>Criteri rossi:</b> ${crit.filter(x => x.stato === 'ros
 </div>
 <div class="lotto">${svgLotto(parts)}</div>
 <div class="small">Confini: ${esc(d.sito.fonte || '')}${d.sito.aggiornato ? ' · fogli aggiornati al ' + esc(d.sito.aggiornato) : ''}${d.sito.consultato_il ? ' · consultato il ' + esc(dataIt(d.sito.consultato_il)) : ''}. Superficie grafica, non catastale ufficiale. Nessun dato sui proprietari.</div>
+
+${sezioneStatoSito(d.stato_sito)}
 
 <h2>Ipotesi di progetto</h2>
 <div class="kv">
@@ -180,4 +210,4 @@ ${dom.length ? dom.map(g => `<p><b>${esc(g.destinatario)}</b></p><ol class="dom"
 </main></body></html>`;
 }
 
-if (typeof module !== 'undefined') module.exports = { costruisciScheda, domande, svgLotto, DISCLAIMER, DESTINATARI };
+if (typeof module !== 'undefined') module.exports = { costruisciScheda, domande, svgLotto, svgSovrapposto, DISCLAIMER, DESTINATARI };

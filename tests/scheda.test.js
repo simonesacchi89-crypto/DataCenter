@@ -47,3 +47,16 @@ test('ogni criterio con fonte, numeri principali e disegno del lotto', () => {
   assert.ok(html.includes('66.262 m²') && html.includes('13.035 m³/anno') && html.includes('<svg'));
   assert.ok(html.includes('La capacità di connessione la conosce solo Terna.'));
 });
+
+test('stato del sito: nota senza effetti sui semafori, con foto, note e foto aerea', () => {
+  const senza = costruisciScheda(dati);
+  assert.ok(senza.includes('Nessuna foto o nota inserita'));
+  const con = costruisciScheda(Object.assign({}, dati, { stato_sito: {
+    aerea: { immagine: 'data:image/jpeg;base64,AAAA', fonte: 'Ortofoto 2012', date_volo: '16/05/2012', anno: 2012, nota: 'stato attuale diverso',
+             sovrapposto: '<svg viewBox="0 0 10 10"></svg>' },
+    foto: [{ src: 'data:image/jpeg;base64,BBBB', didascalia: 'Capannoni', fonte: 'foto di prova' }],
+    note: [{ titolo: 'Coperture', testo: 'shed, materiale da verificare' }] } }));
+  assert.ok(con.includes('nota, non semaforo') && con.includes('Capannoni') && con.includes('shed, materiale da verificare') && con.includes('16/05/2012'));
+  const conta = h => (h.match(/class="sem /g) || []).length;
+  assert.strictEqual(conta(con), conta(senza));  // nessun semaforo in più
+});

@@ -195,3 +195,20 @@ def api_controlli(lotto: Lotto):
         return controlli.controlla(lotto.geometrie, lotto.codice_comune)
     except (ValueError, KeyError, IndexError) as e:
         raise HTTPException(status_code=400, detail=f"Geometria del lotto non valida: {e}") from e
+
+
+# ---- Fase 5: ortofoto e foto di esempio ----
+from backend import ortofoto as orto  # noqa: E402
+
+
+@app.get("/api/ortofoto")
+def api_ortofoto(s: float, w: float, n: float, e: float, anno: int = 2012):
+    return _catasto(orto.ortofoto, s, w, n, e, anno)
+
+
+@app.get("/esempi/foto_demo/{nome}")
+def foto_demo(nome: str):
+    path = (ROOT / "esempi" / "foto_demo" / nome).resolve()
+    if path.parent != (ROOT / "esempi" / "foto_demo").resolve() or not path.is_file() or path.suffix.lower() not in {".jpg", ".json"}:
+        raise HTTPException(status_code=404)
+    return FileResponse(path)

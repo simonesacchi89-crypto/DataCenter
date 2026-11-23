@@ -31,6 +31,7 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 | 19 | Terna – dati statistici | mix elettrico | ⚠️ dati 2025 letti, licenza non trovata | da verificare |
 | 20 | Piano regolatore comunale | 2 | 📝 | – |
 | 21 | ISTAT – elenco comuni (codice catastale) | ricerca particella | ✅ | da verificare |
+| 22 | Geoportale Nazionale MASE – Ortofoto a colori 2012, 2006, 2000 | foto aerea (nota, Fase 5) | ✅ | nessuna condizione dichiarata nel servizio |
 
 ---
 
@@ -196,3 +197,12 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 
 ## 20. Destinazione urbanistica
 - Nessuna fonte nazionale: PGT/PRG comunali spesso in PDF. Inserimento manuale in Fase 1–3, come previsto da SPEC.
+
+## 22. Geoportale Nazionale MASE – Ortofoto (Fase 5, verificate il 23/11/2026)
+- **Endpoint:** `http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_12.map` (anche `_06`, `_00`; elenco in https://gn.mase.gov.it/portale/servizio-di-consultazione-wms).
+- **Layer:** `OI.ORTOIMMAGINI.<anno>.32` (fuso UTM 32, ovest di 12° E) / `.33` (est); il layer `default` dà errore "LayerNotDefined". Date dei voli: `OI.DATEVOLO.<anno>` via GetFeatureInfo; il formato cambia per anno (2012: `date = '20120516;...'`; 2006 e 2000: `data_prin_ = '19/05/07'`).
+- **Prova su Magenta:** la serie 2012 è volata il 16/05, 29/05, 22/06 e 17/07/2012; la serie "2006" il 19 e 24/05/**2007**; la serie "2000" il 03/06/**1999**. La scheda mostra la data vera del volo.
+- **CRS:** EPSG:4326 supportato (GetMap con BBOX lat,lon). L'altezza dell'immagine si calcola per non deformarla.
+- **Condizioni:** "Fees: Nessuna condizione applicata; AccessConstraints: Nessuno".
+- **Limite:** la serie più recente è del 2012. Ortofoto regionali più recenti (es. AGEA per la Lombardia) non ancora verificate.
+- **Wikimedia Commons** (foto libere da terra): il 23/11/2026 l'API ha risposto 429 (troppe richieste da questo ambiente); non usata.

@@ -95,3 +95,11 @@ def test_rete_controlli_positivi(cache_temporanea):
     assert K.c4_c5_idrogeo(Lotto([quadrato(10.005, 45.114, 60)]))[0]["stato"] == "rosso"
     # L'Aquila: zona sismica 2
     assert K.c12_sismica(Lotto([quadrato(13.398, 42.3498, 60)]))["stato"] == "giallo"
+
+
+def test_rete_ortofoto(cache_temporanea):
+    from backend import ortofoto
+    r = ortofoto.ortofoto(45.4660, 8.8710, 45.4680, 8.8740, 2012, 400)
+    assert r["immagine"].startswith("data:image/jpeg;base64,/9j/")
+    assert "2012" in (r["date_volo"] or "") and r["altezza"] > 100
+    assert "2007" in (ortofoto.ortofoto(45.4660, 8.8710, 45.4680, 8.8740, 2006, 400)["date_volo"] or "")

@@ -1,0 +1,54 @@
+[
+ {
+  "file": "01_ortofoto_2012_lotto.jpg",
+  "didascalia": "Vista aerea del lotto ex Novaceta e dintorni",
+  "fonte": "Geoportale Nazionale MASE – Ortofoto a colori 2012 (WMS) – http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_12.map",
+  "data": "volo del 16/05/2012, 29/05/2012, 22/06/2012, 17/07/2012",
+  "licenza": "Geoportale Nazionale MASE: nessuna condizione applicata (GetCapabilities)",
+  "riquadro_lat_lon": [
+   45.4636,
+   8.867,
+   45.4716,
+   8.8795
+  ]
+ },
+ {
+  "file": "02_ortofoto_2012_capannoni.jpg",
+  "didascalia": "Dettaglio dei capannoni industriali e delle coperture",
+  "fonte": "Geoportale Nazionale MASE – Ortofoto a colori 2012 (WMS) – http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_12.map",
+  "data": "volo del 16/05/2012, 29/05/2012, 22/06/2012, 17/07/2012",
+  "licenza": "Geoportale Nazionale MASE: nessuna condizione applicata (GetCapabilities)",
+  "riquadro_lat_lon": [
+   45.4662,
+   8.87,
+   45.469,
+   8.8745
+  ]
+ },
+ {
+  "file": "03_ortofoto_2006_lotto.jpg",
+  "didascalia": "Vista aerea del lotto (serie 2006)",
+  "fonte": "Geoportale Nazionale MASE – Ortofoto a colori 2006 (WMS) – http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_06.map",
+  "data": "volo del 19/05/2007, 24/05/2007",
+  "licenza": "Geoportale Nazionale MASE: nessuna condizione applicata (GetCapabilities)",
+  "riquadro_lat_lon": [
+   45.4636,
+   8.867,
+   45.4716,
+   8.8795
+  ]
+ },
+ {
+  "file": "04_ortofoto_2000_lotto.jpg",
+  "didascalia": "Vista aerea del lotto (serie 2000)",
+  "fonte": "Geoportale Nazionale MASE – Ortofoto a colori 2000 (WMS) – http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/ortofoto_colore_00.map",
+  "data": "volo del 03/06/1999",
+  "licenza": "Geoportale Nazionale MASE: nessuna condizione applicata (GetCapabilities)",
+  "riquadro_lat_lon": [
+   45.4636,
+   8.867,
+   45.4716,
+   8.8795
+  ]
+ }
+]
