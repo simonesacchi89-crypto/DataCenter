@@ -137,3 +137,38 @@ def script(nome: str):
     if nome not in {"engine", "dati", "casi"}:
         raise HTTPException(status_code=404)
     return FileResponse(ROOT / f"{nome}.js", media_type="text/javascript")
+
+
+# ---- Catasto: particelle (Fase 2) ----
+from backend import catasto  # noqa: E402
+
+
+def _catasto(fn, *args):
+    try:
+        return fn(*args)
+    except catasto.NonTrovato as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except catasto.ErroreFonte as e:
+        raise HTTPException(status_code=502, detail=f"{e} – criterio da verificare") from e
+
+
+@app.get("/api/particella/punto")
+def api_particella_punto(lat: float = Query(..., ge=35, le=48), lon: float = Query(..., ge=6, le=19)):
+    return _catasto(catasto.particella_da_punto, lat, lon)
+
+
+@app.get("/api/particelle/cerca")
+def api_particelle_cerca(comune: str = Query(..., min_length=2), foglio: int = Query(..., ge=1, le=9999),
+                         particelle: str = Query(..., description="numeri separati da virgola"),
+                         provincia: str | None = Query(None, min_length=2, max_length=2)):
+    lista = [p for p in (x.strip() for x in particelle.replace(";", ",").split(",")) if p]
+    if not lista or len(lista) > 50:
+        raise HTTPException(status_code=400, detail="Indica da 1 a 50 particelle")
+    return _catasto(catasto.cerca_particelle, comune, foglio, lista, provincia)
+
+
+@app.get("/api/particelle/riquadro")
+def api_particelle_riquadro(s: float, w: float, n: float, e: float):
+    return _catasto(catasto.particelle_in_riquadro, s, w, n, e)

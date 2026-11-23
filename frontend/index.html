@@ -2,6 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 /* Layout: pannello dati a sinistra (fisso su desktop), risultati a destra; scala A–G come nell'etichetta UE */
 :root {
@@ -96,6 +97,17 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   #btn-pvgis { margin-top: 6px; }
   #check-reali { grid-column: 1 / -1; }
+  #mappa { height: 420px; border-radius: 6px; border: 1px solid var(--line); margin-top: 10px; z-index: 0; }
+  .sito-form { display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 1.6fr auto; gap: 8px; align-items: end; }
+  @media (max-width: 760px) { .sito-form { grid-template-columns: 1fr 1fr; } }
+  .sito-form .field { margin: 0; }
+  .sito-sum { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px; align-items: baseline; }
+  .sito-sum b { font-family: var(--f-mono); font-size: 18px; }
+  .sito-list { font-size: 13px; margin-top: 8px; }
+  @media (min-width: 900px) { .sito-list.molte { columns: 2; } }
+  .sito-list button { font-size: 12px; padding: 1px 8px; margin-left: 6px; }
+  .sem { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; }
+  .sem.verde { background: var(--cA); } .sem.giallo { background: var(--cD); color: #222; } .sem.rosso { background: var(--cG); } .sem.grigio { background: var(--muted); }
   .tbl-reali { width: 100%; border-collapse: collapse; font-size: 13px; }
   .tbl-reali th, .tbl-reali td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
   .tbl-reali td.n { text-align: right; font-family: var(--f-mono); white-space: nowrap; }
@@ -189,6 +201,23 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
     </aside>
 
     <main>
+      <section class="card" id="sito">
+        <h2>Il sito</h2>
+        <p class="note">Cerca per comune, foglio e particelle, oppure clicca sulla mappa per aggiungere o togliere particelle. Da vicino compaiono i confini catastali.</p>
+        <form class="sito-form" id="sito-form">
+          <div class="field"><label for="s-comune">Comune</label><input type="text" id="s-comune" placeholder="es. Magenta" autocomplete="off"></div>
+          <div class="field"><label for="s-prov">Prov.</label><input type="text" id="s-prov" maxlength="2" placeholder="MI"></div>
+          <div class="field"><label for="s-foglio">Foglio</label><input type="number" id="s-foglio" min="1" step="1"></div>
+          <div class="field"><label for="s-part">Particelle</label><input type="text" id="s-part" placeholder="es. 211, 212"></div>
+          <button type="submit" id="s-cerca">Cerca</button>
+        </form>
+        <span class="hint" id="sito-status" aria-live="polite"></span>
+        <div id="mappa" role="region" aria-label="Mappa del sito"></div>
+        <div class="sito-sum" id="sito-sum"></div>
+        <div class="sito-list" id="sito-list"></div>
+        <p class="hint" id="sito-fonte"></p>
+      </section>
+
       <section class="kpis" id="kpis" aria-live="polite"></section>
 
       <section class="card">
@@ -249,6 +278,7 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
 <script src="engine.js"></script>
 <script src="dati.js"></script>
 <script src="casi.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 
 
@@ -290,6 +320,9 @@ function setProject(cfg) {
   $('sys').value = cfg.sys; $('pv').value = cfg.pv; $('e-decl').value = cfg.eDecl || ''; $('hydro-evap').checked = false;
   $('sd').value = 2.5; $('years').value = 10;
   $('lat').value = cfg.lat; $('lon').value = cfg.lon; $('pvgis-box').hidden = true; $('site-hint').hidden = false;
+  const cat = cfg.catasto || {};
+  $('s-comune').value = cat.comune || ''; $('s-prov').value = cat.prov || ''; $('s-foglio').value = cat.foglio || ''; $('s-part').value = cat.part || '';
+  if (sito.mappa) { sito.scelte.clear(); sito.mappa.setView([cfg.lat, cfg.lon], 17); disegnaSito(); }
   state.pvgis = null; pvgisStatus('Temperature orarie vere 2005–2023 e umidità tipica del mese, da PVGIS (Commissione europea). Serve il programma locale avviato.', '');
   state.clima = JSON.parse(JSON.stringify(CLIMI[cfg.site === 'custom' ? 'viterbo' : cfg.site]));
   state.mix = Object.assign({}, MIX0); state.f = Object.assign({}, F0);
@@ -545,6 +578,111 @@ async function renderChecksReali() {
     <p class="note">Con il clima vero del proprio sito il modello, in media, sta sotto i dati pubblicati; i dati pubblicati sono raggiunti nelle estati più calde. Si leggono quindi come valori da anno caldo, non come medie. Le soglie dei sistemi non sono state ritarate (decisione del 23/11/2026). Fonte clima: ${m.fonte}; dati ${m.dati_meteo}; scaricato il ${dataIt(m.scaricato_il)}.</p>`;
 }
 
+// ---------------- Il sito: particelle catastali sulla mappa (Fase 2) ----------------
+const sito = { scelte: new Map(), meta: null, mappa: null, strSel: null, strVis: null, caricaVis: null };
+const fmtM2 = x => fmt(x) + ' m²';
+function sitoStatus(msg, cls) { const s = $('sito-status'); s.textContent = msg || ''; s.className = 'hint' + (cls ? ' ' + cls : ''); }
+
+function initMappa() {
+  if (typeof L === 'undefined') { sitoStatus('Mappa non disponibile (libreria non caricata).', 'warn-txt'); return; }
+  const m = L.map('mappa', { zoomControl: true }).setView([parseFloat($('lat').value) || 45.467, parseFloat($('lon').value) || 8.874], 16);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19,
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · particelle © Agenzia delle Entrate (CC BY 4.0)' }).addTo(m);
+  sito.strVis = L.geoJSON(null, { style: { color: '#6b7c88', weight: 1, fill: true, fillOpacity: 0.02 },
+    onEachFeature: (f, layer) => layer.on('click', ev => { L.DomEvent.stopPropagation(ev); scambia(f.properties.p); }) }).addTo(m);
+  sito.strSel = L.geoJSON(null, { style: { color: '#c4552a', weight: 2.5, fillColor: '#c4552a', fillOpacity: 0.25 },
+    onEachFeature: (f, layer) => { layer.bindTooltip(etichetta(f.properties.p)); layer.on('click', ev => { L.DomEvent.stopPropagation(ev); scambia(f.properties.p); }); } }).addTo(m);
+  m.on('click', ev => daPunto(ev.latlng.lat, ev.latlng.lng));
+  m.on('moveend', () => { clearTimeout(sito.caricaVis); sito.caricaVis = setTimeout(caricaVisibili, 500); });
+  sito.mappa = m;
+  $('sito-form').addEventListener('submit', ev => { ev.preventDefault(); cercaParticelle(); });
+  disegnaSito(); caricaVisibili();
+}
+
+function etichetta(p) { return `Foglio ${p.foglio}${p.allegato !== '0' ? ' all. ' + p.allegato : ''}, particella ${p.particella} · ${fmtM2(p.superficie_m2)}`; }
+
+async function api(url) {
+  let res;
+  try { res = await fetch(url); } catch (e) { throw new Error('il programma locale non risponde (avvialo con: uvicorn backend.app:app)'); }
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(d.detail || ('errore ' + res.status));
+  return d;
+}
+
+async function caricaVisibili() {
+  const m = sito.mappa; if (!m) return;
+  if (m.getZoom() < 17) { sito.strVis.clearLayers(); return; }
+  const b = m.getBounds();
+  try {
+    const d = await api(`/api/particelle/riquadro?s=${b.getSouth().toFixed(4)}&w=${b.getWest().toFixed(4)}&n=${b.getNorth().toFixed(4)}&e=${b.getEast().toFixed(4)}`);
+    sito.meta = sito.meta || d;
+    sito.strVis.clearLayers();
+    sito.strVis.addData(d.particelle.map(p => ({ type: 'Feature', geometry: p.geometry, properties: { p } })));
+  } catch (e) { /* confini di contorno: se mancano la mappa resta usabile */ }
+}
+
+function scambia(p) {
+  if (sito.scelte.has(p.riferimento)) sito.scelte.delete(p.riferimento); else sito.scelte.set(p.riferimento, p);
+  disegnaSito();
+}
+
+async function daPunto(lat, lon) {
+  sitoStatus('Cerco la particella in questo punto…');
+  try {
+    const d = await api(`/api/particella/punto?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}`);
+    sito.meta = d; sitoStatus('');
+    scambia(d.particelle[0]);
+  } catch (e) { sitoStatus(e.message, 'warn-txt'); }
+}
+
+async function cercaParticelle() {
+  const comune = $('s-comune').value.trim(), foglio = $('s-foglio').value, part = $('s-part').value.trim(), prov = $('s-prov').value.trim();
+  if (!comune || !foglio || !part) { sitoStatus('Servono comune, foglio e almeno una particella.', 'warn-txt'); return; }
+  sitoStatus('Cerco nel catasto… (la prima volta per un comune può servire mezzo minuto)'); $('s-cerca').disabled = true;
+  try {
+    const q = new URLSearchParams({ comune, foglio, particelle: part }); if (prov) q.set('provincia', prov);
+    const d = await api('/api/particelle/cerca?' + q);
+    sito.meta = d;
+    d.particelle.forEach(p => sito.scelte.set(p.riferimento, p));
+    sitoStatus(`${d.comune.nome} (${d.comune.sigla}, codice ${d.comune.codice_catastale}): trovate ${d.particelle.length}` +
+      (d.non_trovate.length ? ` · non trovate: ${d.non_trovate.join(', ')}` : ''), d.non_trovate.length ? 'warn-txt' : 'ok-txt');
+    disegnaSito(true);
+  } catch (e) { sitoStatus(e.message, 'warn-txt'); }
+  finally { $('s-cerca').disabled = false; }
+}
+
+function semaforoSuperficie(m2mw) {
+  // SPEC §4 criterio 1 (soglie iniziali da tarare): ≥1.000 verde, 600–1.000 giallo, <600 rosso
+  if (!(m2mw > 0)) return ['grigio', 'da verificare'];
+  return m2mw >= 1000 ? ['verde', 'adeguata'] : m2mw >= 600 ? ['giallo', 'da approfondire'] : ['rosso', 'scarsa'];
+}
+
+function disegnaSito(zoom = false) {
+  const ord = p => [p.foglio, p.allegato, parseInt(p.particella, 10) || 0, p.particella];
+  const lista = [...sito.scelte.values()].sort((a, b) => { const x = ord(a), y = ord(b); for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; });
+  $('sito-list').classList.toggle('molte', lista.length > 6);
+  sito.strSel.clearLayers();
+  sito.strSel.addData(lista.map(p => ({ type: 'Feature', geometry: p.geometry, properties: { p } })));
+  if (zoom && lista.length) sito.mappa.fitBounds(sito.strSel.getBounds(), { maxZoom: 18, padding: [20, 20] });
+  const tot = lista.reduce((a, p) => a + p.superficie_m2, 0);
+  const mw = parseFloat($('it-mw').value) || 0;
+  const m2mw = mw > 0 && tot > 0 ? tot / mw : NaN;
+  const [col, txt] = semaforoSuperficie(m2mw);
+  $('sito-sum').innerHTML = lista.length
+    ? `<span>Particelle: <b>${lista.length}</b></span><span>Superficie: <b>${fmtM2(tot)}</b> (${fmt(tot / 10000, 2)} ha)</span>`
+      + `<span>Per MW IT: <b>${isNaN(m2mw) ? '–' : fmt(m2mw) + ' m²/MW'}</b> <span class="sem ${col}">${txt}</span></span>`
+    : '<span class="hint">Nessuna particella scelta.</span>';
+  $('sito-list').innerHTML = lista.map(p => `<div>${etichetta(p)} <span class="hint">(${p.riferimento})</span><button type="button" data-r="${p.riferimento}">togli</button></div>`).join('');
+  $('sito-list').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { sito.scelte.delete(b.dataset.r); disegnaSito(); }));
+  const m = sito.meta;
+  const agg = [...new Set(lista.map(p => p.foglio_aggiornato_al).filter(Boolean))];
+  $('sito-fonte').textContent = m ? `Fonte: ${m.fonte}, ${m.licenza}. Consultato il ${dataIt(m.consultato_il)}${agg.length ? ' · fogli aggiornati al ' + agg.join(', ') : ''}. ${m.nota} Soglie m²/MW indicative (SPEC, da tarare).` : '';
+  if (lista.length) {  // il clima si riferisce al centro delle particelle scelte
+    const c = sito.strSel.getBounds().getCenter();
+    $('lat').value = c.lat.toFixed(3); $('lon').value = c.lng.toFixed(3);
+  }
+}
+
 function summaryText() {
   const { inp, r } = last;
   const siteName = $('site').selectedOptions[0].textContent;
@@ -580,6 +718,7 @@ $('site').addEventListener('change', () => {
   if (v !== 'custom' && v !== 'pvgis') { state.clima = JSON.parse(JSON.stringify(CLIMI[v])); renderClima(); }
   run();
 });
+$('it-mw').addEventListener('input', () => { if (sito.mappa) disegnaSito(); });
 ['prj-name', 'it-mw', 'load', 'pv', 'e-decl', 'hydro-evap', 'sd', 'years'].forEach(id => $(id).addEventListener('input', schedule));
 $('hydro-evap').addEventListener('change', schedule);
 
@@ -587,7 +726,7 @@ const TUSCIA = { name: 'Esempio: data center 5 MW, area Civita Castellana', site
   tag: 'Esempio ipotetico · Tuscia 5 MW' };
 const AWS = { name: 'AWS Rho-Pero (Milano) – dati VIA', site: 'milano', lat: 45.510, lon: 9.087, itMW: 79, load: 100, sys: 'diretta', pv: 0,
   tag: 'Caso reale · AWS Rho-Pero 79 MW' };
-const MAGENTA = { name: 'MXP Magenta (Namira SGR) – Studio di Impatto Ambientale dic. 2025', site: 'milano', lat: 45.467, lon: 8.874, itMW: 240, load: 100, sys: 'aria_dry', pv: 0, eDecl: 3153.6, overrides: { accessori: 0.0062 },
+const MAGENTA = { name: 'MXP Magenta (Namira SGR) – Studio di Impatto Ambientale dic. 2025', site: 'milano', lat: 45.467, lon: 8.874, catasto: { comune: 'Magenta', prov: 'MI', foglio: 4, part: '211' }, itMW: 240, load: 100, sys: 'aria_dry', pv: 0, eDecl: 3153.6, overrides: { accessori: 0.0062 },
   tag: 'Caso reale · Magenta, dati SIA' };
 $('btn-tuscia').addEventListener('click', () => setProject(TUSCIA));
 $('btn-magenta').addEventListener('click', () => setProject(MAGENTA));
@@ -596,4 +735,5 @@ $('btn-aws').addEventListener('click', () => setProject(AWS));
 setProject(TUSCIA);
 renderChecks();
 renderChecksReali();
+initMappa();
 </script>

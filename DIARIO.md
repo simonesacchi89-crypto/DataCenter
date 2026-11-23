@@ -104,3 +104,33 @@ I dati pubblicati si leggono come **valori da anno caldo** (2006, 2015 e 2022 so
 - **Nuovo criterio di test col clima reale:** il dato pubblicato deve stare dentro la forbice degli anni reali ed essere raggiunto almeno in un anno. I test col clima sintetico restano con le tolleranze di SPEC §7. In totale 16 test, tutti verdi.
 - I dati PVGIS di Magenta e Rho-Pero sono salvati in `tests/fixtures/` (scaricati il 23/11/2026), così i test funzionano anche senza rete.
 - La pagina mostra la tabella "I dati pubblicati negli anni veri" nella sezione di verifica, se il programma locale è avviato.
+
+## 23 novembre 2026 – Fase 2: particella sulla mappa
+
+### Cosa è stato fatto
+- `backend/catasto.py`: connettore Catasto (WFS Agenzia delle Entrate) con tre funzioni:
+  - **da coordinate** → particella che contiene il punto;
+  - **da comune + foglio + particelle** → nome comune → codice catastale (ISTAT) → riquadro del comune (OpenStreetMap/Nominatim) → foglio → particelle;
+  - **particelle visibili** in un riquadro (per disegnare i confini sulla mappa).
+  Per ogni particella: confine, superficie grafica, data di aggiornamento del foglio, fonte, licenza e data di consultazione. Cache su disco (7 giorni catasto, 30 giorni ISTAT, 180 giorni riquadri dei comuni).
+- Nuovi indirizzi del backend: `/api/particella/punto`, `/api/particelle/cerca`, `/api/particelle/riquadro`.
+- Pagina: nuova sezione **"Il sito"** in cima, con ricerca, mappa (sfondo OpenStreetMap), confini catastali da vicino, selezione con un clic, totale in m² ed ettari, **m²/MW** con il colore del criterio 1 di SPEC (soglie indicative). Le coordinate del clima si aggiornano al centro delle particelle scelte.
+- Test: `tests/test_catasto.py` (4 senza rete, 4 con il servizio reale). In totale 12 test Python + 16 del motore, tutti verdi.
+
+### Prova sul caso reale: Magenta, ex Novaceta
+- "Magenta, foglio 4, particella 211" → 66.262 m², foglio aggiornato all'11/09/2025.
+- Le 15 particelle che cadono nel perimetro "area ex Novaceta" di OpenStreetMap (foglio 4: 37, 42, 166, 206, 207, 210, 211, 212, 213, 214, 218, 219, 237, 242, 243) sommano **215.349 m²**. Lo SIA dichiara **circa 215.300 m²**: differenza 0,02%.
+- Con 240 MW IT: **897 m²/MW → giallo** "da approfondire", come atteso da SPEC §7.
+
+### Limiti del servizio catasto scoperti (gestiti nel codice, dettagli in FONTI.md)
+- Rifiuta richieste con `count=5000` (ma non 4999).
+- Oltre circa 7 km di lato risponde "0 risultati" senza errore: rischio di falsi "niente trovato". Il codice divide sempre i riquadri grandi.
+- Errori intermittenti su richieste corrette: il codice riprova. La prima ricerca in un comune può richiedere circa 30 secondi; poi resta in cache.
+- Il WMS del catasto non si può sovrapporre alla mappa web (non supporta EPSG:3857): i confini si disegnano dai dati vettoriali.
+
+### Cosa resta aperto
+1. Il lotto va scelto a mano (clic o elenco di particelle): non esiste un dato aperto che dica "questo è il sito del progetto".
+2. Superficie grafica ≠ superficie catastale ufficiale: lo dice la scheda; per i numeri ufficiali serve la visura.
+3. Licenza ISTAT da verificare.
+4. Ricerca per **indirizzo** non ancora nella pagina (Nominatim trova la via ma non sempre il civico): si può aggiungere come "vai a" sulla mappa.
+5. Trento e Bolzano: catasto provinciale, non coperto (la scheda dice "da verificare").

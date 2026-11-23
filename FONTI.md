@@ -11,7 +11,7 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 | # | Fonte | Criterio | Stato | Licenza |
 |---|---|---|---|---|
 | 1 | Catasto AdE – WMS | 1, mappa | ✅ | CC BY 4.0 |
-| 2 | Catasto AdE – WFS | 1 (confine e superficie) | ⚠️ ricerca per foglio/particella non riuscita | CC BY 4.0 |
+| 2 | Catasto AdE – WFS | 1 (confine e superficie) | ✅ ricerca per foglio/particella risolta in Fase 2 (via riquadri) | CC BY 4.0 |
 | 3 | PVGIS (JRC) – TMY e serie orarie 2005–2023 | 14 (clima) | ✅ | uso libero, condizioni formali da leggere |
 | 4 | ISPRA IdroGEO – API | 4, 5 | ⚠️ codici classi frane da confermare | da verificare |
 | 5 | Geoportale Nazionale MASE – classificazione sismica | 12 | ⚠️ dato al 2012 | nessuna condizione dichiarata |
@@ -30,6 +30,7 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 | 18 | GSE Atlaimpianti | 13 | ❌ sistema offline | CC BY-NC-SA 3.0 IT (sito) |
 | 19 | Terna – dati statistici | mix elettrico | ⚠️ dati 2025 letti, licenza non trovata | da verificare |
 | 20 | Piano regolatore comunale | 2 | 📝 | – |
+| 21 | ISTAT – elenco comuni (codice catastale) | ricerca particella | ✅ | da verificare |
 
 ---
 
@@ -53,6 +54,12 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **Attenzione:** i nomi dei parametri vanno **in minuscolo** (con `SERVICE=`, `BBOX=` maiuscoli il servizio risponde "Richiesta non valida"); bbox in ordine lat,lon.
 - **Non funziona:** ricerca per codice (`resourceId`, filtro `PropertyIsEqualTo` su `NATIONALCADASTRALREFERENCE`, anche combinato con BBOX): risposta vuota o errore 500. La documentazione non dice quali filtri sono supportati.
 - **Conseguenza per la Fase 2:** "comune + foglio + particella" va risolto in un altro modo (download massivo per comune in GML, oppure ricerca per riquadro del foglio). Da decidere in Fase 2.
+- **Limiti trovati in Fase 2 (prove del 23/11/2026), gestiti in `backend/catasto.py`:**
+  - `count=5000` viene rifiutato con "Richiesta non valida"; `4999` no. Usiamo `count=1000` e, se la risposta arriva piena, si divide il riquadro.
+  - Riquadri oltre ~0,07° di lato: risposta `numberMatched="unknown"` con 0 oggetti, **senza errore**. Si lavora a tessere di 0,05°.
+  - Errori "Richiesta non valida" **intermittenti** su richieste corrette: 4 tentativi con pause 1-2-4 s, poi riquadri più piccoli.
+- **Ricerca comune + foglio + particella (Fase 2):** nome comune → codice catastale (ISTAT, §21) → riquadro del comune (Nominatim, §17) → fogli `CP:CadastralZoning` nel riquadro (filtrati per prefisso del codice) → particelle `CP:CadastralParcel` nel riquadro del foglio, filtrate per numero. Prova: Magenta foglio 4 particella 211 trovata; le 15 particelle del lotto ex Novaceta sommano 215.349 m² (SIA: 215.300).
+- **Data di aggiornamento:** `BEGINLIFESPANVERSION` del foglio (Magenta foglio 4: 11/09/2025), mostrata nella scheda.
 - **Download massivo:** https://www.agenziaentrate.gov.it/portale/download-massivo-cartografia-catastale – GML in ZIP per comune, aggiornamento semestrale, CC BY 4.0. URL dei file non ancora verificato.
 - **Limiti dichiarati:** "un limite massimo di richieste contemporanee" (numero non indicato).
 
@@ -155,6 +162,8 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **Endpoint verificato:** `https://nominatim.openstreetmap.org/search?q=...&format=json`
 - **Prova:** "Viale Piemonte 66, Magenta" → trova la via (45,46593, 8,87352), non il civico.
 - **Regole d'uso:** massimo 1 richiesta al secondo, User-Agent identificativo, cache obbligatoria. Licenza ODbL.
+- **Uso in Fase 2:** riquadro (`boundingbox`) del comune per cercare i fogli catastali; cache 180 giorni, pausa di 1,1 s tra le richieste.
+- **Sfondo della mappa:** tessere `https://tile.openstreetmap.org/{z}/{x}/{y}.png` (verificate, uso leggero consentito con attribuzione). Il WMS del catasto non supporta EPSG:3857 (provato: errore), quindi i confini si disegnano dal WFS.
 
 ## 18. GSE – Atlaimpianti (teleriscaldamento)
 - **Pagina:** https://www.gse.it/dati-e-scenari/atlaimpianti – "attualmente non disponibile poiché in fase di aggiornamento"; `atla.gse.it` non risponde.
@@ -165,6 +174,12 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **Pagina verificata:** https://www.terna.it/it/sistema-elettrico/statistiche/pubblicazioni-statistiche → rimanda a `https://dati.terna.it/generazione/dati-statistici#produzione/energia-elettrica-fonte`
 - **Dati 2025 letti nella pagina (Ufficio statistico Terna):** domanda 312,2 TWh; produzione lorda 277,1 TWh (+2,3%); termoelettrico non rinnovabile 51,1%; fotovoltaico oltre 45 TWh (+25%); idroelettrico 43,7 TWh (−20,1%); import netto 46,9 TWh.
 - **Limiti:** il portale dati.terna.it è in JavaScript, file scaricabili e licenza non ancora trovati. Il fattore di `engine.js` (~0,67 L/kWh, "Rete Italia 2025") va ricontrollato con questi numeri in Fase 1.
+
+## 21. ISTAT – Elenco dei comuni italiani
+- **Endpoint verificato (23/11/2026):** `https://www.istat.it/storage/codici-unita-amministrative/Elenco-comuni-italiani.csv` (CSV, codifica Latin-1, separatore `;`, 7.896 comuni).
+- **Colonne usate:** "Denominazione in italiano", "Sigla automobilistica", "Codice Catastale del comune" (es. Magenta → E801), "Codice Comune formato alfanumerico", "Denominazione Regione".
+- **Uso:** dal nome del comune al codice catastale. Nomi doppi (es. San Teodoro ME/SS): si chiede la provincia.
+- **Licenza:** da verificare (la pagina note legali ISTAT non si legge senza browser). Cache locale 30 giorni.
 
 ## 20. Destinazione urbanistica
 - Nessuna fonte nazionale: PGT/PRG comunali spesso in PDF. Inserimento manuale in Fase 1–3, come previsto da SPEC.
