@@ -16,9 +16,9 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 | 4 | ISPRA IdroGEO – API | 4, 5 | ⚠️ codici classi frane da confermare | da verificare |
 | 5 | Geoportale Nazionale MASE – classificazione sismica | 12 | ⚠️ dato al 2012 | nessuna condizione dichiarata |
 | 6 | Geoportale Nazionale MASE – PAI | 4, 5 (riserva) | ⚠️ lento, dati disomogenei | nessuna condizione dichiarata |
-| 7 | EEA – Natura 2000 | 11 | ✅ | EEA (CC BY 4.0 da confermare) |
-| 8 | MASE – Natura 2000 (shapefile ufficiale) | 11 (riserva) | non provato il download | non commerciale, no ridistribuzione |
-| 9 | MiC – SITAP (GeoServer WMS) | 3 | ⚠️ copertura per regione disomogenea | non dichiarata |
+| 7 | EEA – Natura 2000 | 11 | ⚠️ dal 23/11/2026 non raggiungibile da qui; sostituita da §8 | EEA (CC BY 4.0 da confermare) |
+| 8 | Geoportale Nazionale MASE – WFS SIC/ZSC/ZPS ed EUAP | 11, 3 (parchi) | ✅ usato in Fase 3 | nessuna condizione dichiarata nel servizio; dati MASE: non commerciale (vedi §8) |
+| 9 | MiC – SITAP (GeoServer WMS e WFS) | 3 | ⚠️ copertura per regione disomogenea; WFS usato in Fase 3 | non dichiarata |
 | 10 | MiC – Vincoli in Rete | 3 | ❌ nessun servizio pubblico | citare la fonte |
 | 11 | Regione Lazio – PTPR (WFS) | 3 (Lazio) | ✅ elenco strati letto | da verificare |
 | 12 | Lombardia – siti contaminati e bonificati | 6 | ⚠️ senza coordinate | CC0 |
@@ -103,12 +103,21 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **WMS:** `https://bio.discomap.eea.europa.eu/arcgis/services/ProtectedSites/Natura2000Sites/MapServer/WMSServer`
 - **Prova:** Magenta → nessun sito entro 3 km; entro 4 km IT2050005 Boschi della Fagiana; entro 5 km anche IT2010014 e IT2080301 Boschi del Ticino. `RELEASE_DATE` 13/12/2024 (versione "fine 2024").
 - **Licenza:** copyright "EEA, Copenhagen, 2025"; scheda metadati collegata a CC BY 4.0 (testo non letto): da confermare.
+- **23/11/2026:** da questo ambiente le connessioni a `bio.discomap.eea.europa.eu` si interrompono (anche una semplice GET). Per il criterio 11 si usa il WFS del Geoportale Nazionale (§8 bis), fonte ufficiale italiana.
 
 ## 8. MASE – Natura 2000 ufficiale italiana
 - **Pagina:** https://www.mase.gov.it/portale/web/guest/schede-e-cartografie (aggiornata 27/01/2026)
 - **Download:** `https://download.mase.gov.it/Natura2000/Trasmissione%20CE_dicembre2025` – shapefile SIC/ZSC/ZPS, UTM 32N WGS84. Non ancora scaricato.
 - **WMS (Geoportale Nazionale):** `.../Vettoriali/SIC_ZSC_ZPS.map`, strato `SP.SITIPROTETTI.SIC_ZSC_ZPS` (GetCapabilities ✅).
 - **Licenza:** "I dati possono essere utilizzati solo per fini non commerciali, previa citazione della fonte. È vietata la distribuzione, l'adattamento e ogni altra modifica." → per uno strumento potenzialmente commerciale preferire EEA.
+
+## 8 bis. Geoportale Nazionale MASE – servizi WFS (verificati il 23/11/2026, Fase 3)
+- **Elenco ufficiale:** https://gn.mase.gov.it/portale/wfs (67 servizi).
+- **Natura 2000:** `http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/wfs/SIC_ZSC_ZPS.map`, tipo `SP.SITIPROTETTI.SIC_ZSC_ZPS`. WFS 1.1.0, bbox `s,w,n,e,urn:ogc:def:crs:EPSG::4326`, GML 3.1 con coordinate **lat lon**. Campi: `site_code`, `tipo_sito`, `denominazi`, `aggiorn` (AAAAMM, es. 201210), `regione`.
+  Prova: attorno a Magenta trova IT2050005, IT2080301, IT2010014, IT1150001. Il lotto ex Novaceta dista 3,4 km dal più vicino.
+- **Aree protette EUAP (parchi e riserve, art. 142 lett. f):** `.../ms_ogc/wfs/EUAP.map`, tipo `SP.SITIPROTETTI.EUAP`. Campi: `codice_are`, `tipo` (PNR, PN, RNR...), `nome_gazze`, `ente_gesto`. Prova: trova "Parco naturale lombardo della Valle del Ticino" (EUAP0195). Copre il buco di SITAP sui parchi regionali lombardi.
+- **Altri utili:** `PAI_pericolosita.map`, `Classificazione_sismica_2012.map` (anche in WFS).
+- **Nota:** servizi solo in `http`. Il campo `aggiorn` dei siti Natura 2000 riporta date vecchie (2006–2012): da confrontare con lo shapefile MASE di dicembre 2025.
 
 ## 9. Ministero della Cultura – SITAP
 - **Pagina:** https://sitap.cultura.gov.it/ (descrizione: https://cultura.gov.it/sitap-sistema-informativo-territoriale-ambientale-e-paesaggistico)
@@ -119,6 +128,9 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **Prova:** GetFeatureInfo `application/json` (WMS 1.1.1). Magenta: nessun elemento negli strati Lombardia provati. Controllo Bellagio: `lombardia_142_rispetto_laghi` → "Como (Lago di)". `lombardia_art136` a Bellagio non restituisce nulla: da capire in Fase 3.
 - **Limiti:** copertura molto diversa da regione a regione; SITAP dichiara di avere "carattere meramente informativo" e nessun valore certificativo.
 - **Licenza:** GetCapabilities "Fees: NONE, AccessConstraints: NONE"; nessuna licenza esplicita sul sito.
+- **WFS (verificato il 23/11/2026, Fase 3):** `https://sitap.cultura.gov.it/geoserver/sitap_ws_clone/wfs` e `.../sitap_wms_bounce/wfs` (WFS 2.0.0, `outputFormat=application/json`, `srsName=EPSG:4326`). Il bbox va dato come `ovest,sud,est,nord,EPSG:4326` (lon, lat): con l'ordine opposto risponde 0 oggetti senza errore. Alcuni strati hanno coordinate con quota (x, y, z). Gli strati `v_geo_anagrafica_beni_*` rispondono errore 400.
+- **Lombardia, contenuto:** `lombardia_art136` (332 decreti), `lombardia_art136_perimetri` (555), `lombardia_136_difficile_cartografazione`, `lombardia_142_*` (fiumi, laghi, boschi, montagne, ghiacciai, zone umide). **Mancano i parchi regionali (art. 142 lett. f)**: si usa EUAP (§8 bis).
+- **Data dei dati:** non dichiarata dalla fonte.
 
 ## 10. Ministero della Cultura – Vincoli in Rete
 - **Pagina:** https://cultura.gov.it/vincoli-in-rete-ricerca-sia-di-tipo-alfanumerico-che-cartografico
@@ -154,6 +166,7 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 ## 16. OpenStreetMap – Overpass API
 - **Documentazione:** https://wiki.openstreetmap.org/wiki/Overpass_API
 - **Endpoint provati:** `https://overpass-api.de/api/interpreter` (connessione chiusa dal server), `overpass.kumi.systems` e `overpass.private.coffee` (timeout), `maps.mail.ru/osm/tools/overpass` (raggiunto ma "server too busy"), `overpass.osm.jp` (502).
+- **23/11/2026:** `overpass.kumi.systems` ha risposto 504 (sovraccarico), `overpass-api.de` connessione chiusa. Il connettore (`backend/controlli.py`) è pronto e provato con una risposta di prova; va provato dal vivo sul computer locale.
 - **Diagnosi:** la rete di questo ambiente è senza restrizioni e `api.openstreetmap.org` e Nominatim rispondono; il blocco è lato server Overpass verso indirizzi cloud. **Da riprovare dal computer di Simone** prima della Fase 3.
 - **Alternative se resta bloccato:** estratto OSM regionale scaricato una volta (es. Geofabrik) e interrogato in locale.
 - **Licenza:** ODbL 1.0, citare "© OpenStreetMap contributors".

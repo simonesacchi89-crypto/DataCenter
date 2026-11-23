@@ -172,3 +172,24 @@ def api_particelle_cerca(comune: str = Query(..., min_length=2), foglio: int = Q
 @app.get("/api/particelle/riquadro")
 def api_particelle_riquadro(s: float, w: float, n: float, e: float):
     return _catasto(catasto.particelle_in_riquadro, s, w, n, e)
+
+
+# ---- Controlli automatici sul lotto (Fase 3) ----
+from pydantic import BaseModel  # noqa: E402
+
+from backend import controlli  # noqa: E402
+
+
+class Lotto(BaseModel):
+    geometrie: list[dict]
+    codice_comune: str | None = None
+
+
+@app.post("/api/controlli")
+def api_controlli(lotto: Lotto):
+    if not 1 <= len(lotto.geometrie) <= 50:
+        raise HTTPException(status_code=400, detail="Scegli da 1 a 50 particelle")
+    try:
+        return controlli.controlla(lotto.geometrie, lotto.codice_comune)
+    except (ValueError, KeyError, IndexError) as e:
+        raise HTTPException(status_code=400, detail=f"Geometria del lotto non valida: {e}") from e

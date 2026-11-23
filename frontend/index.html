@@ -107,6 +107,15 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
   @media (min-width: 900px) { .sito-list.molte { columns: 2; } }
   .sito-list button { font-size: 12px; padding: 1px 8px; margin-left: 6px; }
   .sem { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; }
+  .tbl-crit { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  .tbl-crit th, .tbl-crit td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tbl-crit th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .tbl-crit td.c-sem { white-space: nowrap; width: 1%; }
+  .tbl-crit details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  .tbl-crit details ul { margin: 4px 0 0 16px; padding: 0; }
+  .tbl-crit select { font-size: 12px; min-width: 190px; max-width: 100%; }
+  .tbl-crit .fonte { font-size: 12px; color: var(--muted); }
+  .sem.info { background: var(--water); }
   .sem.verde { background: var(--cA); } .sem.giallo { background: var(--cD); color: #222; } .sem.rosso { background: var(--cG); } .sem.grigio { background: var(--muted); }
   .tbl-reali { width: 100%; border-collapse: collapse; font-size: 13px; }
   .tbl-reali th, .tbl-reali td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -216,6 +225,14 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
         <div class="sito-sum" id="sito-sum"></div>
         <div class="sito-list" id="sito-list"></div>
         <p class="hint" id="sito-fonte"></p>
+      </section>
+
+      <section class="card" id="controlli">
+        <h2>Controlli sul sito</h2>
+        <p class="note">Criteri di SPEC §4 sulle particelle scelte. Grigio = da verificare: la fonte non risponde, non copre l'area o il dato va inserito a mano. Le soglie sono ipotesi iniziali da tarare.</p>
+        <div class="btns"><button type="button" id="btn-controlli">Esegui i controlli sul lotto</button></div>
+        <span class="hint" id="controlli-status" aria-live="polite">Scegli prima le particelle nella sezione "Il sito".</span>
+        <div class="tbl-wrap"><table class="tbl-crit" id="tbl-crit"></table></div>
       </section>
 
       <section class="kpis" id="kpis" aria-live="polite"></section>
@@ -428,6 +445,7 @@ function run() {
   ].map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join('');
   drawChart(r.months);
   renderCompare(inp);
+  if (typeof renderControlli === 'function' && $('tbl-crit')) renderControlli();
 }
 
 function drawChart(months) {
@@ -681,6 +699,104 @@ function disegnaSito(zoom = false) {
     const c = sito.strSel.getBounds().getCenter();
     $('lat').value = c.lat.toFixed(3); $('lon').value = c.lng.toFixed(3);
   }
+  if ($('tbl-crit')) renderControlli();
+}
+
+// ---------------- Controlli sul sito (Fase 3) ----------------
+const ctrl = { auto: null, manuali: {}, inCorso: false };
+const NOMI_CRIT = { 1: 'Superficie per MW IT', 2: 'Destinazione urbanistica', 3: 'Vincoli paesaggistici e culturali (entro 500 m)',
+  4: 'Pericolosità idraulica', 5: 'Frane', 6: 'Siti contaminati', 7: 'Profondità della falda', 8: 'Distanza dalla rete ad alta tensione',
+  9: 'Capacità di connessione', 10: 'Vicini sensibili', 11: 'Aree Natura 2000 (entro 1 km)', 12: 'Sismicità (classificazione comunale)',
+  13: 'Teleriscaldamento vicino', 14: 'Clima, acqua, energia' };
+const SCELTE = {
+  2: [['grigio', 'da verificare'], ['verde', 'produttiva / industriale'], ['giallo', 'da verificare o serve variante'], ['rosso', 'agricola o tutelata']],
+  6: [['grigio', 'da verificare'], ['verde', 'nessun sito entro 500 m'], ['giallo', 'sito vicino o falda contaminata'], ['rosso', 'bonifica aperta sul lotto']],
+  7: [['grigio', 'da verificare'], ['verde', 'oltre 8 m'], ['giallo', '5–8 m'], ['rosso', 'meno di 5 m']],
+  13: [['grigio', 'da verificare'], ['verde', 'rete entro 2 km (opportunità)'], ['info', 'nessuna rete nota (solo informativo)']],
+};
+const DOMANDE_MAN = {
+  2: 'Chiedere al Comune il certificato di destinazione urbanistica e se serve una variante.',
+  6: "Chiedere ad ARPA e Comune lo stato delle procedure di bonifica sul lotto e la qualità della falda.",
+  7: 'Chiedere dati piezometrici recenti (livello e oscillazioni della falda) o prevedere indagini in sito.',
+  13: "Chiedere al Comune o al gestore se ci sono reti di teleriscaldamento a cui cedere il calore.",
+};
+const TXT_STATO = { verde: 'verde', giallo: 'giallo', rosso: 'rosso', grigio: 'da verificare', info: 'informativo' };
+
+function initControlli() { $('btn-controlli').addEventListener('click', eseguiControlli); renderControlli(); }
+
+async function eseguiControlli() {
+  const lista = [...sito.scelte.values()];
+  if (!lista.length) { $('controlli-status').textContent = 'Scegli prima almeno una particella.'; return; }
+  ctrl.inCorso = true; $('btn-controlli').disabled = true;
+  $('controlli-status').className = 'hint';
+  $('controlli-status').textContent = 'Interrogo le fonti… (può servire fino a un paio di minuti)';
+  try {
+    const res = await fetch('/api/controlli', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ geometrie: lista.map(p => p.geometry), codice_comune: lista[0].codice_comune || null }) });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(d.detail || ('errore ' + res.status));
+    ctrl.auto = d; ctrl.lotto = lista.map(p => p.riferimento).join(',');
+    const c7 = d.aiuti && d.aiuti.c7;
+    if (c7 && !ctrl.manuali[7]) ctrl.manuali[7] = { stato: c7.stato_proposto, proposto: true };
+    $('controlli-status').textContent = `Controlli eseguiti il ${new Date(d.consultato_il).toLocaleString('it-IT')} su ${lista.length} particelle` + (d.comune ? ` (${d.comune.nome}, ${d.comune.regione})` : '') + '.';
+  } catch (e) {
+    $('controlli-status').className = 'hint warn-txt';
+    $('controlli-status').textContent = 'Controlli non eseguiti: ' + (e instanceof TypeError ? 'il programma locale non risponde' : e.message);
+  } finally { ctrl.inCorso = false; $('btn-controlli').disabled = false; renderControlli(); }
+}
+
+function rigaCriteri() {
+  const righe = {};
+  // 1: superficie (dalla sezione Il sito)
+  const lista = [...sito.scelte.values()];
+  const tot = lista.reduce((a, p) => a + p.superficie_m2, 0), mw = parseFloat($('it-mw').value) || 0;
+  const m2mw = tot > 0 && mw > 0 ? tot / mw : NaN;
+  const [c1] = semaforoSuperficie(m2mw);
+  righe[1] = { id: 1, stato: c1, valore: isNaN(m2mw) ? 'scegli le particelle' : `${fmt(m2mw)} m²/MW (${fmt(tot)} m² per ${fmt(mw, 1)} MW)`,
+    fonte: sito.meta ? sito.meta.fonte : 'Catasto (Agenzia delle Entrate)', data_fonte: lista.length ? [...new Set(lista.map(p => p.foglio_aggiornato_al))].join(', ') : null,
+    nota: 'Superficie grafica dal confine catastale. Soglie: ≥1.000 verde, 600–1.000 giallo, <600 rosso.',
+    domanda: c1 !== 'verde' ? 'Verificare se la superficie basta per edifici, sottostazione, serbatoi e distanze di rispetto.' : null };
+  // automatici
+  if (ctrl.auto) ctrl.auto.criteri.forEach(c => { righe[c.id] = c; });
+  // manuali
+  for (const id of [2, 6, 7, 13]) {
+    const m = ctrl.manuali[id] || { stato: 'grigio' };
+    const aiuto = ctrl.auto && ctrl.auto.aiuti && ctrl.auto.aiuti['c' + id];
+    righe[id] = { id, stato: m.stato, manuale: true, valore: (SCELTE[id].find(x => x[0] === m.stato) || [, ''])[1],
+      fonte: m.proposto && aiuto ? aiuto.fonte + ' (proposto, modificabile)' : (m.stato === 'grigio' ? 'da inserire a mano' : 'inserito a mano'),
+      data_fonte: null, nota: aiuto ? (aiuto.classe ? `Classe di soggiacenza: ${aiuto.classe} m. ` : '') + (aiuto.nota || '') : '',
+      dettagli: aiuto && aiuto.contaminati ? [...aiuto.contaminati.map(x => 'contaminato: ' + x), ...aiuto.bonificati.map(x => 'bonificato: ' + x)] : [],
+      domanda: m.stato !== 'verde' ? DOMANDE_MAN[id] : null };
+  }
+  // 14: clima, acqua, energia (dal calcolo)
+  if (last) {
+    const cw = classWUE(last.r.wue);
+    righe[14] = { id: 14, stato: 'AB'.includes(cw) ? 'verde' : 'CD'.includes(cw) ? 'giallo' : 'rosso',
+      valore: `WUE ${fmt3(last.r.wue)} L/kWh (classe ${cw}) · PUE ${fmt2(last.r.pue)} · acqua diretta ${fmt(last.r.waterM3)} m³/anno`,
+      fonte: 'engine.js · ' + climaFonte(last.inp), data_fonte: null, nota: 'Classi WUE della bozza di etichetta UE: A–B verde, C–D giallo, E–G rosso.',
+      domanda: 'AB'.includes(cw) ? null : 'Chiedere al progettista dati dei costruttori e alternative di raffreddamento con meno acqua.' };
+  }
+  return Array.from({ length: 14 }, (_, i) => righe[i + 1] || { id: i + 1, stato: 'grigio', valore: ctrl.inCorso ? 'in corso…' : 'controllo non ancora eseguito', fonte: '', nota: '' });
+}
+
+function renderControlli() {
+  if (!$('tbl-crit')) return;
+  const righe = rigaCriteri();
+  ctrl.righe = righe;
+  const esc = t => String(t ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  let h = '<thead><tr><th></th><th>#</th><th>Criterio</th><th>Valore trovato</th><th>Fonte e data</th><th>Nota</th></tr></thead><tbody>';
+  for (const r of righe) {
+    const sel = r.manuale ? `<select data-id="${r.id}" aria-label="${esc(NOMI_CRIT[r.id])}">${SCELTE[r.id].map(([v, t]) => `<option value="${v}"${v === r.stato ? ' selected' : ''}>${t}</option>`).join('')}</select>` : esc(r.valore);
+    const data = r.data_fonte ? `dati: ${esc(r.data_fonte)}` : (r.consultato_il ? 'data dei dati non dichiarata' : '');
+    const cons = r.consultato_il ? ` · consultato il ${new Date(r.consultato_il).toLocaleDateString('it-IT')}` : '';
+    const det = (r.dettagli && r.dettagli.length) ? `<details><summary>${r.dettagli.length} elementi</summary><ul>${r.dettagli.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>` : '';
+    h += `<tr><td class="c-sem"><span class="sem ${r.stato}">${TXT_STATO[r.stato] || r.stato}</span></td><td>${r.id}</td><td>${esc(NOMI_CRIT[r.id])}</td>`
+      + `<td>${sel}</td><td class="fonte">${esc(r.fonte)}${data || cons ? '<br>' + data + cons : ''}</td><td class="fonte">${esc(r.nota)}${det}</td></tr>`;
+  }
+  $('tbl-crit').innerHTML = h + '</tbody>';
+  $('tbl-crit').querySelectorAll('select').forEach(el => el.addEventListener('change', () => {
+    ctrl.manuali[el.dataset.id] = { stato: el.value, proposto: false }; renderControlli();
+  }));
 }
 
 function summaryText() {
@@ -736,4 +852,5 @@ setProject(TUSCIA);
 renderChecks();
 renderChecksReali();
 initMappa();
+initControlli();
 </script>

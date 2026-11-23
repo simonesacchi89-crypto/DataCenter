@@ -134,3 +134,48 @@ I dati pubblicati si leggono come **valori da anno caldo** (2006, 2015 e 2022 so
 3. Licenza ISTAT da verificare.
 4. Ricerca per **indirizzo** non ancora nella pagina (Nominatim trova la via ma non sempre il civico): si può aggiungere come "vai a" sulla mappa.
 5. Trento e Bolzano: catasto provinciale, non coperto (la scheda dice "da verificare").
+
+## 23 novembre 2026 – Fase 3: controlli automatici
+
+### Cosa è stato fatto
+- `backend/geo.py`: distanze in metri tra il lotto (una o più particelle) e oggetti vicini (poligoni, linee, punti).
+- `backend/controlli.py`: un controllo per criterio, eseguiti in parallelo; ogni esito ha stato, valore, fonte, data dei dati, data di consultazione, nota, dettagli e la domanda da fare (per la Fase 4). Gli esiti riusciti restano in cache un giorno; quelli grigi si riprovano a ogni esecuzione.
+  - **3 Vincoli:** SITAP (WFS, strati della regione del lotto + beni monumentali, aree archeologiche, UNESCO) + parchi e riserve EUAP. Dentro → rosso, entro 500 m → giallo.
+  - **4–5 Alluvioni e frane:** ISPRA IdroGEO, cerchio che contiene il lotto (max 500 m). Frane con codice → grigio (codici non documentati).
+  - **8 e 10 Rete AT e vicini sensibili:** OpenStreetMap via Overpass (linee e stazioni ≥132 kV entro 10 km; scuole, ospedali, abitazioni entro 500 m).
+  - **9 Capacità:** sempre "da chiedere a Terna".
+  - **11 Natura 2000:** WFS del Geoportale Nazionale (il servizio europeo da qui non risponde più).
+  - **12 Sismica:** Geoportale Nazionale, dato al 2012 con avviso.
+  - **Aiuti per 6 e 7:** elenchi regionali dei siti contaminati/bonificati del comune (Lombardia) e falda di Città Metropolitana di Milano (proposta modificabile).
+- Nuovo indirizzo `POST /api/controlli`.
+- Pagina: sezione **"Controlli sul sito"** con i 14 criteri. 1 (superficie) e 14 (clima) calcolati dalla pagina; 2, 6, 7, 13 scelti a mano con menu; gli altri automatici.
+- Test: `tests/test_controlli.py` (distanze, logica OSM con risposta di prova, lotto Novaceta, controlli positivi: Lago di Como → vincolo, Ticino → dentro Natura 2000, alveo del Po → P3, L'Aquila → zona 2). Totale 17 test Python + 16 motore, tutti verdi.
+
+### Lotto ex Novaceta: confronto con quanto atteso da SPEC §7
+| # | Criterio | Atteso (SIA, ARPA, Soprintendenza) | Trovato | Commento |
+|---|---|---|---|---|
+| 1 | Superficie | giallo (~900 m²/MW) | **giallo**, 897 m²/MW | torna |
+| 2 | Urbanistica | verde (industriale dismessa) | manuale | va inserito; nessun dato aperto |
+| 3 | Vincoli | giallo (rilievi Soprintendenza su skyline) | **verde** | i dati SITAP/EUAP non contengono i pareri della Soprintendenza: la nota lo dice e la domanda resta |
+| 4–5 | Idraulica, frane | – | verde | – |
+| 6 | Contaminati | rosso o giallo | manuale (aiuto: Novaceta nell'elenco *bonificati* 2023) | l'elenco regionale da solo porterebbe fuori strada |
+| 7 | Falda | giallo (3–8 m) | **giallo** proposto (5–7,5 m) | torna |
+| 8 | Rete AT | verde (stazione ~500 m a nord) | grigio | Overpass non raggiungibile da qui: da provare in locale |
+| 9 | Capacità | da chiedere | **giallo, da chiedere** | torna |
+| 10 | Vicini | giallo (residenti a 400–450 m) | grigio | come 8 |
+| 11 | Natura 2000 | screening presentato | **verde** (3,4 km) | soglia 1 km da tarare: lo screening è stato chiesto comunque |
+| 12 | Sismica | – | verde, zona 4 | – |
+| 13 | Teleriscaldamento | nessuna rete (informativo) | manuale | nessuna fonte aperta |
+
+### Problemi incontrati
+- Il servizio europeo Natura 2000 (EEA), funzionante il 21/11, dal 23/11 non risponde da questo ambiente → sostituito dal WFS del Geoportale Nazionale, che è anche la fonte ufficiale italiana.
+- SITAP WFS vuole il riquadro in ordine lon,lat: con l'ordine opposto risponde 0 oggetti senza errore (rischio di falsi verdi, gestito).
+- SITAP per la Lombardia non ha i parchi regionali: integrati con EUAP.
+- Overpass: ancora non raggiungibile (un server ha risposto 504, sovraccarico).
+
+### Cosa resta aperto
+1. **Provare Overpass dal computer di Simone** (criteri 8 e 10). Se non va, valutare un estratto OSM regionale in locale.
+2. Codici frane IdroGEO da decifrare (chiedere a ISPRA).
+3. Soglie da tarare: Natura 2000 (1 km), vincoli (i pareri della Soprintendenza non sono nei dati).
+4. Dati Natura 2000 del Geoportale con date di aggiornamento vecchie: confrontare con lo shapefile MASE dicembre 2025.
+5. IdroGEO controlla un cerchio che contiene il lotto, non il poligono esatto: va bene per la prefattibilità, da dire nella scheda (lo dice già la nota).
