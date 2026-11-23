@@ -60,3 +60,9 @@ test('stato del sito: nota senza effetti sui semafori, con foto, note e foto aer
   const conta = h => (h.match(/class="sem /g) || []).length;
   assert.strictEqual(conta(con), conta(senza));  // nessun semaforo in più
 });
+
+test('perimetro disegnato: compare come tale nella scheda, senza foglio', () => {
+  const per = { riferimento: 'PERIMETRO-1', perimetro: true, particella: 'Perimetro 1', foglio: null, superficie_m2: 12000, geometry: quadrato };
+  const html = costruisciScheda(Object.assign({}, dati, { sito: Object.assign({}, dati.sito, { particelle: [dati.sito.particelle[0], per] }) }));
+  assert.ok(html.includes('foglio 4: 211') && html.includes('Perimetro 1 disegnato a mano') && !html.includes('foglio null'));
+});

@@ -197,18 +197,21 @@ def c4_c5_idrogeo(lotto: Lotto):
     except (catasto.ErroreFonte, ValueError) as e:
         return [grigio(4, "Pericolosità idraulica", fonte, url, str(e)), grigio(5, "Frane", fonte, url, str(e))]
     area = f"cerchio di {r} m dal centro del lotto (comprende il lotto{'' if lotto.raggio <= 500 else ' solo in parte'})"
+    # Caso Bornasco (23/11/2026): rogge che attraversano il sito, non presenti nella mosaicatura ISPRA.
+    reticolo = (" La mosaicatura ISPRA non comprende il reticolo idrico minore (rogge, canali, fontanili): "
+                "verificare lo studio del reticolo minore e la componente geologica del PGT.")
     estr = (d.get("extraction_on") or "")[:10]
     data = NON_DICHIARATA
     area += f"; estrazione ISPRA del {estr}" if estr else ""
     idr = sorted({str(x) for x in (d.get("pericolosita_idraulica") or [])})
     # codici 1/2/3 = scenari P1/P2/P3 (dedotto dai punti di controllo, FONTI.md §4)
     if not idr:
-        e4 = esito(4, "Pericolosità idraulica", "verde", "nessuna area a pericolosità", fonte, url, data, f"Area controllata: {area}.")
+        e4 = esito(4, "Pericolosità idraulica", "verde", "nessuna area a pericolosità", fonte, url, data, f"Area controllata: {area}." + reticolo)
     else:
         top = max(int(x) for x in idr if x.isdigit())
         stato = {1: "verde", 2: "giallo", 3: "rosso"}.get(top, "grigio")
         e4 = esito(4, "Pericolosità idraulica", stato, "scenari presenti: " + ", ".join("P" + x for x in idr), fonte, url, data,
-                   f"Area controllata: {area}. Codici ISPRA interpretati come P1 bassa, P2 media, P3 elevata.",
+                   f"Area controllata: {area}. Codici ISPRA interpretati come P1 bassa, P2 media, P3 elevata." + reticolo,
                    domanda="Verificare sul PGRA/PAI dell'autorità di distretto la pericolosità esatta sul lotto." if top >= 2 else None)
     fr = d.get("pericolosita_frane")
     if not fr:

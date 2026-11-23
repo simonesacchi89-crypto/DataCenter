@@ -29,6 +29,7 @@ ISTAT_URL = "https://www.istat.it/storage/codici-unita-amministrative/Elenco-com
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 USER_AGENT = "prefattibilita-dc/0.1"
 TIMEOUT_S = 120
+TIMEOUT_WFS_S = 40      # una richiesta WFS normale risponde in pochi secondi
 
 FONTE_CATASTO = "Agenzia delle Entrate – Cartografia catastale (WFS INSPIRE)"
 LICENZA_CATASTO = "CC BY 4.0 – © Agenzia delle Entrate"
@@ -151,16 +152,24 @@ def _wfs(tipo: str, s: float, w: float, n: float, e: float, profondita: int = 0)
               "typeNames": tipo, "count": COUNT_WFS, "bbox": f"{s:.6f},{w:.6f},{n:.6f},{e:.6f}"}
     # In prova il servizio a volte risponde "Richiesta non valida" a una richiesta corretta,
     # che ripetuta poco dopo funziona: 4 tentativi con pause crescenti, poi riquadri più piccoli.
-    root = None
+    # Il 23/11/2026 il WFS ha smesso di rispondere per ore (timeout): in quel caso si smette subito
+    # (2 tentativi brevi, nessuna divisione del riquadro) e il criterio diventa "da verificare".
+    root, cadute = None, 0
     for tentativo in range(4):
         try:
-            r = ET.fromstring(_get(WFS_URL, params))
+            r = ET.fromstring(_get(WFS_URL, params, timeout=TIMEOUT_WFS_S))
             if not r.tag.endswith("ServiceExceptionReport"):
                 root = r
                 break
             errore = "Il catasto ha rifiutato la richiesta: " + "".join(r.itertext()).strip()[:200]
-        except (ErroreFonte, ET.ParseError) as ex:
+        except ET.ParseError as ex:
             errore = f"Il catasto non ha risposto correttamente: {ex}"
+        except ErroreFonte as ex:
+            errore = f"Il catasto non risponde: {ex}"
+            if "non raggiungibile" in str(ex):
+                cadute += 1
+                if cadute >= 2:
+                    raise ErroreFonte(errore + " – servizio non disponibile, da verificare") from ex
         if tentativo < 3:
             time.sleep(2 ** tentativo)
     if root is None and profondita >= 3:

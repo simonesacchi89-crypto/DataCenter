@@ -52,3 +52,12 @@ for (const caso of CASI_REALI) {
     assert.ok(r.anniSopra.length >= 1, 'il dato pubblicato non è mai raggiunto');
   });
 }
+
+test('prelievo massimo orario: uscita aggiuntiva coerente, nessun cambiamento sui totali', () => {
+  const p = Object.assign({}, D.COMMON0, D.SYS.diretta.p, { itMW: 79, load: 1 });
+  const r = E.simulateMultiHours(p, anni);
+  assert.ok(Math.abs(r.waterM3 - 51856.5) < 1);          // totale invariato rispetto a SPEC
+  assert.ok(r.waterPeakM3h > 0 && r.waterPeakM3h * 8760 > r.waterM3 / 10);
+  const chiuso = E.simulateMultiHours(Object.assign({}, D.COMMON0, D.SYS.aria_dry.p, { itMW: 40, load: 1 }), anni);
+  assert.strictEqual(chiuso.waterPeakM3h, 0);
+});

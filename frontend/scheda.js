@@ -105,9 +105,10 @@ function costruisciScheda(d) {
   const dom = domande(crit);
   const c = d.calcolo || {};
   const parts = d.sito.particelle || [];
-  const fogli = [...new Set(parts.map(p => p.foglio))].sort((a, b) => a - b);
+  const fogli = [...new Set(parts.filter(p => !p.perimetro).map(p => p.foglio))].sort((a, b) => a - b);
+  const perimetri = parts.filter(p => p.perimetro);
   const elencoPart = fogli.map(f => `foglio ${f}: ${parts.filter(p => p.foglio === f).map(p => p.particella)
-    .sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0)).join(', ')}`).join(' · ');
+    .sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0)).join(', ')}`).concat(perimetri.map(p => `${p.particella} disegnato a mano`)).join(' · ');
   const fonti = [...new Map(crit.filter(x => x.fonte && !/a mano|^engine\.js/.test(x.fonte))
     .map(x => [x.fonte.replace(/ \(proposto, modificabile\)$/, ''), x])).entries()].map(([fonte, x]) => ({ fonte, url: x.url }));
   const dataIt = iso => iso ? new Date(iso).toLocaleDateString('it-IT') : '';
@@ -189,6 +190,7 @@ ${crit.map(x => `<tr><td><span class="sem ${x.stato}">${TXT[x.stato] || x.stato}
 <tr><td>WUE (acqua in sito, etichetta UE)</td><td class="num"><b>${fmtN(c.wue, 3)} L/kWh</b> · classe ${esc(c.classeWUE)}</td><td class="small"></td></tr>
 <tr><td>Energia IT / totale</td><td class="num">${fmtN(c.itGWh, 1)} / ${fmtN(c.totGWh, 1)} GWh/anno</td><td class="small"></td></tr>
 <tr><td>Acqua diretta</td><td class="num"><b>${fmtN(c.acquaM3)} m³/anno</b></td><td class="small">forbice tra anni ${fmtN(c.acquaMin)}–${fmtN(c.acquaMax)} m³</td></tr>
+${c.acquaM3 > 1 ? `<tr><td>Prelievo massimo orario</td><td class="num">${fmtN(c.piccoM3h, 1)} m³/h</td><td class="small">fonte dell'acqua: ${esc(c.fonteAcqua || 'non indicata')}</td></tr>` : ''}
 <tr><td>Acqua indiretta (centrali elettriche)</td><td class="num">${fmtN(c.indirettaM3)} m³/anno</td><td class="small">rete ${fmtN(c.fattoreRete, 2)} L/kWh, mix Terna 2025, metodo The Green Grid; fuori dall'etichetta UE</td></tr>
 <tr><td>Impronta idrica completa</td><td class="num">${fmtN(c.impronta, 2)} L/kWh IT</td><td class="small">${fmtN(c.quotaIndiretta * 100)}% dalle centrali</td></tr>
 <tr><td>Calore di scarto</td><td class="num">${fmtN(c.caloreGWh, 1)} GWh termici/anno</td><td class="small">temperatura indicativa ${esc(c.temperaturaCalore)}</td></tr>

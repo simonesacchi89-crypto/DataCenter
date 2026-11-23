@@ -2,8 +2,8 @@
 
 Strumento locale per la **prefattibilità di un terreno per un data center**. Si fanno quattro passi:
 
-1. **Il sito.** Cerchi comune + foglio + particelle oppure clicchi sulla mappa: compaiono i confini catastali e la superficie.
-2. **Il progetto.** Indichi potenza IT, carico e raffreddamento. Lo strumento calcola energia, acqua diretta e indiretta e calore, anche sul clima reale del punto (PVGIS, 2005–2023).
+1. **Il sito.** Cerchi comune + foglio + particelle, clicchi sulla mappa oppure disegni un perimetro: compaiono i confini catastali e la superficie.
+2. **Il progetto.** Indichi potenza IT, carico, raffreddamento e fonte dell'acqua. Lo strumento calcola energia, acqua diretta e indiretta e calore, anche sul clima reale del punto (PVGIS, 2005–2023).
 3. **I controlli.** Interroga le fonti pubbliche: vincoli, alluvioni, frane, Natura 2000, sismica, rete elettrica, vicini. Ne esce un semaforo per ognuno dei 14 criteri, con fonte e data. In questo passo aggiungi anche foto e note sullo stato del sito.
 4. **La scheda.** Riassunto stampabile (HTML o PDF) con i semafori e le domande da fare a Comune, Terna, ARPA e Soprintendenza.
 
@@ -45,4 +45,5 @@ I test in Python fanno chiamate reali ai servizi pubblici: richiedono la rete e 
 ## Limiti noti
 - Rete elettrica e vicini sensibili usano OpenStreetMap (Overpass), che può essere lento o non raggiungibile: in quel caso il criterio è "da verificare".
 - La foto aerea nazionale più recente è del 2012.
-- Le soglie dei semafori sono ipotesi iniziali da tarare.
+- Le soglie dei semafori sono ipotesi iniziali, tarate in parte su 4 casi reali (vedi `CASI_TEST.md`).
+- I servizi pubblici a volte sono fuori servizio: in quel caso i criteri risultano "da verificare".

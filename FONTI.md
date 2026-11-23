@@ -61,6 +61,7 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
   - Errori "Richiesta non valida" **intermittenti** su richieste corrette: 4 tentativi con pause 1-2-4 s, poi riquadri più piccoli.
 - **Ricerca comune + foglio + particella (Fase 2):** nome comune → codice catastale (ISTAT, §21) → riquadro del comune (Nominatim, §17) → fogli `CP:CadastralZoning` nel riquadro (filtrati per prefisso del codice) → particelle `CP:CadastralParcel` nel riquadro del foglio, filtrate per numero. Prova: Magenta foglio 4 particella 211 trovata; le 15 particelle del lotto ex Novaceta sommano 215.349 m² (SIA: 215.300).
 - **Data di aggiornamento:** `BEGINLIFESPANVERSION` del foglio (Magenta foglio 4: 11/09/2025), mostrata nella scheda.
+- **Disponibilità (23/11/2026):** nel pomeriggio il WFS non ha risposto per un periodo (timeout dopo 60 s) mentre il WMS funzionava. Il connettore ora si ferma dopo 2 timeout e marca "da verificare".
 - **Download massivo:** https://www.agenziaentrate.gov.it/portale/download-massivo-cartografia-catastale – GML in ZIP per comune, aggiornamento semestrale, CC BY 4.0. URL dei file non ancora verificato.
 - **Limiti dichiarati:** "un limite massimo di richieste contemporanee" (numero non indicato).
 
@@ -206,3 +207,9 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **Condizioni:** "Fees: Nessuna condizione applicata; AccessConstraints: Nessuno".
 - **Limite:** la serie più recente è del 2012. Ortofoto regionali più recenti (es. AGEA per la Lombardia) non ancora verificate.
 - **Wikimedia Commons** (foto libere da terra): il 23/11/2026 l'API ha risposto 429 (troppe richieste da questo ambiente); non usata.
+
+## Stato dei servizi il 23/11/2026 (sera)
+- Geoportale Nazionale MASE (WMS e WFS vettoriali): **fuori servizio**, risposta "msPostGISLayerOpen(): Database connection failed". Interessa sismica, Natura 2000, EUAP, PAI. Le ortofoto raster continuavano a funzionare.
+- EEA (bio.discomap.eea.europa.eu): connessioni interrotte da questo ambiente.
+- Overpass (OpenStreetMap): non raggiungibile da questo ambiente.
+- Catasto WFS: interruzione temporanea nel pomeriggio, poi di nuovo raggiungibile.

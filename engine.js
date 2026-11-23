@@ -64,6 +64,7 @@ function simulate(p, climaHours) {
   const itKW = p.itMW * 1000 * p.load;
   const mon = Array.from({ length: 12 }, () => ({ it: 0, tot: 0, water: 0, hoursWater: 0 }));
   let itE = 0, totE = 0, water = 0, evapTot = 0, hoursWater = 0, hoursOut = 0, heat = 0, mechHours = 0, pueHourMax = 0;
+  let waterHourMax = 0; // solo uscita aggiuntiva: litri nell'ora di massimo prelievo (nessun effetto sui calcoli)
   for (const hr of climaHours) {
     const { T, Twb } = hr;
     const Q = itKW * p.kHeat; // calore da smaltire (kW)
@@ -103,10 +104,11 @@ function simulate(p, climaHours) {
     const totKW = itKW + itKW * p.losses + cool;
     if (totKW / itKW > pueHourMax) pueHourMax = totKW / itKW;
     itE += itKW; totE += totKW; water += makeup + acc; evapTot += evap; heat += Q;
+    if (makeup + acc > waterHourMax) waterHourMax = makeup + acc;
     const mm = mon[hr.m]; mm.it += itKW; mm.tot += totKW; mm.water += makeup + acc; if (evap > 0) mm.hoursWater += 1;
   }
   return {
-    itMWh: itE / 1000, totMWh: totE / 1000, pue: totE / itE,
+    itMWh: itE / 1000, totMWh: totE / 1000, pue: totE / itE, waterPeakM3h: waterHourMax / 1000,
     waterM3: water / 1000, wue: water / itE, evapM3: evapTot / 1000,
     hoursWater, hoursOut, mechHours, heatMWh: heat / 1000, pueHourMax,
     months: mon.map(x => ({ pue: x.tot / x.it, waterM3: x.water / 1000, hoursWater: x.hoursWater, itMWh: x.it / 1000 })),
@@ -140,6 +142,7 @@ function simulateMultiHours(p, years) {
   out.wue = out.waterM3 * 1000 / (out.itMWh * 1000);
   out.waterMin = min('waterM3'); out.waterMax = max('waterM3');
   out.pueMin = min('pue'); out.pueMax = max('pue'); out.pueHourMax = max('pueHourMax');
+  out.waterPeakM3h = max('waterPeakM3h'); // prelievo massimo orario nell'anno peggiore
   out.months = Array.from({ length: 12 }, (_, m) => {
     const it = runs.reduce((s, r) => s + r.months[m].itMWh, 0);
     const pueW = runs.reduce((s, r) => s + r.months[m].pue * r.months[m].itMWh, 0) / it;

@@ -207,6 +207,15 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
         </select>
         <span class="hint" id="sys-hint"></span>
       </div>
+      <div class="field"><label for="acqua-fonte">Fonte dell'acqua di raffreddamento</label>
+        <select id="acqua-fonte">
+          <option value="non_nota">Non indicata</option>
+          <option value="acquedotto">Acquedotto (rete pubblica)</option>
+          <option value="pozzi">Pozzi (acqua di falda)</option>
+          <option value="superficiale">Acque superficiali (fiume, canale, roggia)</option>
+          <option value="riuso">Acqua piovana o depurata riutilizzata</option>
+        </select>
+        <span class="hint">Per pozzi e acque superficiali serve una concessione di derivazione: lo strumento riporta il prelievo massimo orario.</span></div>
       <div class="field"><label for="pv">Elettricità prodotta in sito (%)</label><input type="number" id="pv" min="0" max="100" step="1">
         <span class="hint">Solo autoproduzione fisica. Garanzie d'origine e PPA non cambiano l'acqua consumata dalle centrali della rete.</span></div>
       <div class="field"><label for="e-decl">Energia annua dichiarata (GWh, facoltativo)</label><input type="number" id="e-decl" min="0" step="0.1" placeholder="es. dal documento VIA">
@@ -249,6 +258,11 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
           <div class="field"><label for="s-part">Particelle</label><input type="text" id="s-part" placeholder="es. 211, 212"></div>
           <button type="submit" id="s-cerca">Cerca</button>
         </form>
+        <div class="btns" style="margin-top:8px">
+          <button type="button" id="btn-disegna">Disegna un perimetro</button>
+          <button type="button" id="btn-chiudi" hidden>Chiudi il perimetro</button>
+          <button type="button" id="btn-annulla" hidden>Annulla</button>
+        </div>
         <span class="hint" id="sito-status" aria-live="polite"></span>
         <div id="mappa" role="region" aria-label="Mappa del sito"></div>
         <div class="sito-sum" id="sito-sum"></div>
@@ -401,6 +415,7 @@ function setProject(cfg) {
   $('prj-name').value = cfg.name; $('site').value = cfg.site; $('it-mw').value = cfg.itMW; $('load').value = cfg.load;
   $('sys').value = cfg.sys; $('pv').value = cfg.pv; $('e-decl').value = cfg.eDecl || ''; $('hydro-evap').checked = false;
   $('sd').value = 2.5; $('years').value = 10;
+  $('acqua-fonte').value = cfg.fonteAcqua || 'non_nota';
   $('lat').value = cfg.lat; $('lon').value = cfg.lon; $('pvgis-box').hidden = true; $('site-hint').hidden = false;
   const cat = cfg.catasto || {};
   $('s-comune').value = cat.comune || ''; $('s-prov').value = cat.prov || ''; $('s-foglio').value = cat.foglio || ''; $('s-part').value = cat.part || '';
@@ -459,6 +474,7 @@ function readInputs() {
     pv: Math.min(1, Math.max(0, (parseFloat($('pv').value) || 0) / 100)),
     hydro: $('hydro-evap').checked,
     eDecl: Math.max(0, parseFloat($('e-decl').value) || 0),
+    fonteAcqua: $('acqua-fonte').value,
     sd: Math.max(0, parseFloat($('sd').value) || 0),
     years: Math.min(30, Math.max(1, Math.round(parseFloat($('years').value) || 10))),
   };
@@ -504,6 +520,7 @@ function run() {
     ['Ore con compressori accesi', fmt(r.mechHours) + ' h'],
     ['PUE nell\'ora peggiore', fmt2(r.pueHourMax)],
     ['Ore fuori temperatura di mandata', fmt(r.hoursOut) + ' h'],
+    ['Prelievo massimo orario', fmt(r.waterPeakM3h, 1) + ' m³/h (anno peggiore)'],
     ['Litri per kWh della rete', fmt2(r.gridF) + ' L/kWh'],
     ['Anni climatici simulati', climaLabel(inp)],
     ...(r.useDecl ? [['Energia dichiarata', fmt(inp.eDecl, 1) + ' GWh/anno'], ['PUE che ne deriva', fmt2(r.pueImpl) + ' (classe ' + classPUE(r.pueImpl) + ')']] : []),
@@ -673,21 +690,69 @@ function initMappa() {
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19,
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · particelle © Agenzia delle Entrate (CC BY 4.0)' }).addTo(m);
   sito.strVis = L.geoJSON(null, { style: { color: '#6b7c88', weight: 1, fill: true, fillOpacity: 0.02 },
-    onEachFeature: (f, layer) => layer.on('click', ev => { L.DomEvent.stopPropagation(ev); scambia(f.properties.p); }) }).addTo(m);
+    onEachFeature: (f, layer) => layer.on('click', ev => { L.DomEvent.stopPropagation(ev); if (disegno.attivo) aggiungiVertice(ev.latlng); else scambia(f.properties.p); }) }).addTo(m);
   sito.strSel = L.geoJSON(null, { style: { color: '#c4552a', weight: 2.5, fillColor: '#c4552a', fillOpacity: 0.25 },
     onEachFeature: (f, layer) => { layer.bindTooltip(etichetta(f.properties.p)); layer.on('click', ev => { L.DomEvent.stopPropagation(ev); scambia(f.properties.p); }); } }).addTo(m);
-  m.on('click', ev => daPunto(ev.latlng.lat, ev.latlng.lng));
+  m.on('click', ev => (disegno.attivo ? aggiungiVertice(ev.latlng) : daPunto(ev.latlng.lat, ev.latlng.lng)));
+  initDisegno();
   m.on('moveend', () => { clearTimeout(sito.caricaVis); sito.caricaVis = setTimeout(caricaVisibili, 500); });
   sito.mappa = m;
   $('sito-form').addEventListener('submit', ev => { ev.preventDefault(); cercaParticelle(); });
   disegnaSito(); caricaVisibili();
 }
 
-function etichetta(p) { return `Foglio ${p.foglio}${p.allegato !== '0' ? ' all. ' + p.allegato : ''}, particella ${p.particella} · ${fmtM2(p.superficie_m2)}`; }
+// ---- Perimetro disegnato a mano (per progetti già autorizzati, quando le particelle sono state rinumerate) ----
+const disegno = { attivo: false, punti: [], linea: null, n: 0 };
+function initDisegno() {
+  $('btn-disegna').addEventListener('click', () => {
+    disegno.attivo = true; disegno.punti = [];
+    disegno.linea = L.polyline([], { color: '#c4552a', weight: 2, dashArray: '6 4' }).addTo(sito.mappa);
+    $('btn-disegna').hidden = true; $('btn-chiudi').hidden = $('btn-annulla').hidden = false;
+    sitoStatus('Clicca sulla mappa i vertici del perimetro, poi "Chiudi il perimetro".');
+  });
+  $('btn-annulla').addEventListener('click', fineDisegno);
+  $('btn-chiudi').addEventListener('click', chiudiPerimetro);
+}
+function aggiungiVertice(ll) {
+  disegno.punti.push([ll.lng, ll.lat]); disegno.linea.addLatLng(ll);
+  sitoStatus(`${disegno.punti.length} vertici. ${disegno.punti.length >= 3 ? 'Puoi chiudere il perimetro.' : ''}`);
+}
+function fineDisegno() {
+  disegno.attivo = false; if (disegno.linea) sito.mappa.removeLayer(disegno.linea); disegno.linea = null;
+  $('btn-disegna').hidden = false; $('btn-chiudi').hidden = $('btn-annulla').hidden = true;
+}
+function areaPoligonoM2(anello) {  // stesso metodo del backend: piano tangente locale con raggi dell'ellissoide WGS84
+  const a = 6378137, e2 = 6.69437999014e-3, lat0 = anello[0][1] * Math.PI / 180, s = Math.sin(lat0);
+  const n = a / Math.sqrt(1 - e2 * s * s), m = a * (1 - e2) / Math.pow(1 - e2 * s * s, 1.5);
+  const kx = Math.PI / 180 * n * Math.cos(lat0), ky = Math.PI / 180 * m;
+  let A = 0; for (let i = 0; i < anello.length - 1; i++) A += anello[i][0] * kx * anello[i + 1][1] * ky - anello[i + 1][0] * kx * anello[i][1] * ky;
+  return Math.abs(A) / 2;
+}
+async function chiudiPerimetro() {
+  if (disegno.punti.length < 3) { sitoStatus('Servono almeno 3 vertici.', 'warn-txt'); return; }
+  const anello = [...disegno.punti, disegno.punti[0]];
+  disegno.n += 1;
+  const p = { riferimento: 'PERIMETRO-' + disegno.n, perimetro: true, particella: 'Perimetro ' + disegno.n, foglio: null, allegato: '0',
+    geometry: { type: 'Polygon', coordinates: [anello] }, superficie_m2: Math.round(areaPoligonoM2(anello)), foglio_aggiornato_al: null, codice_comune: null };
+  fineDisegno();
+  sito.scelte.set(p.riferimento, p); disegnaSito();
+  sitoStatus(`Perimetro chiuso: ${fmtM2(p.superficie_m2)}. Cerco il comune…`);
+  // comune: dalla particella catastale al centro del perimetro (serve per regione e vincoli)
+  const c = anello.slice(0, -1).reduce((a, q) => [a[0] + q[0], a[1] + q[1]], [0, 0]).map(v => v / (anello.length - 1));
+  try { const d = await api(`/api/particella/punto?lat=${c[1].toFixed(6)}&lon=${c[0].toFixed(6)}`); p.codice_comune = d.particelle[0].codice_comune;
+        sitoStatus(`Perimetro chiuso: ${fmtM2(p.superficie_m2)}, comune ${p.codice_comune}.`, 'ok-txt'); }
+  catch (e) { sitoStatus(`Perimetro chiuso: ${fmtM2(p.superficie_m2)}. Comune non riconosciuto (${e.message.replace(/ – criterio da verificare$/, '')}). I vincoli regionali risulteranno da verificare.`, 'warn-txt'); }
+}
 
-async function api(url) {
+function etichetta(p) { if (p.perimetro) return `${p.particella} (disegnato) · ${fmtM2(p.superficie_m2)}`; return `Foglio ${p.foglio}${p.allegato !== '0' ? ' all. ' + p.allegato : ''}, particella ${p.particella} · ${fmtM2(p.superficie_m2)}`; }
+
+async function api(url, attesaMax = 180000) {
+  // tempo massimo: se una fonte pubblica resta appesa, la pagina lo dice invece di attendere per sempre
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), attesaMax);
   let res;
-  try { res = await fetch(url); } catch (e) { throw new Error('il programma locale non risponde (avvialo con: uvicorn backend.app:app)'); }
+  try { res = await fetch(url, { signal: ctl.signal }); }
+  catch (e) { throw new Error(e.name === 'AbortError' ? 'la fonte non ha risposto in tempo: da verificare' : 'il programma locale non risponde (avvialo con: uvicorn backend.app:app)'); }
+  finally { clearTimeout(timer); }
   const d = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(d.detail || ('errore ' + res.status));
   return d;
@@ -799,7 +864,7 @@ async function eseguiControlli() {
   $('controlli-status').textContent = 'Interrogo le fonti… (può servire fino a un paio di minuti)';
   try {
     const res = await fetch('/api/controlli', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ geometrie: lista.map(p => p.geometry), codice_comune: lista[0].codice_comune || null }) });
+      body: JSON.stringify({ geometrie: lista.map(p => p.geometry), codice_comune: (lista.find(p => p.codice_comune) || {}).codice_comune || null }) });
     const d = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(d.detail || ('errore ' + res.status));
     ctrl.auto = d; ctrl.lotto = lista.map(p => p.riferimento).join(',');
@@ -821,6 +886,31 @@ function avvisoFoglioRecente(lista) {
   return recenti.length ? ` Attenzione: foglio aggiornato di recente (${recenti.join(', ')}): numeri e confini delle particelle possono essere cambiati rispetto a documenti più vecchi (frazionamenti). Confrontare con una visura aggiornata.` : '';
 }
 
+const FONTI_ACQUA = { non_nota: 'non indicata', acquedotto: 'acquedotto', pozzi: 'pozzi (falda)', superficiale: 'acque superficiali', riuso: 'riuso di acqua piovana o depurata' };
+// Criterio 14. Caso Bornasco (23/11/2026): raffreddamento con acqua di falda da pozzi, prelievo massimo 81 m³/h.
+// Con pozzi o acque superficiali e acqua consumata il criterio è almeno giallo (serve una concessione di derivazione).
+function criterio14(r, inp) {
+  const cw = classWUE(r.wue);
+  let stato = 'AB'.includes(cw) ? 'verde' : 'CD'.includes(cw) ? 'giallo' : 'rosso';
+  const usaAcqua = r.waterM3 > 1;
+  const derivazione = usaAcqua && (inp.fonteAcqua === 'pozzi' || inp.fonteAcqua === 'superficiale');
+  if (derivazione && stato === 'verde') stato = 'giallo';
+  const note = ['Classi WUE della bozza di etichetta UE: A–B verde, C–D giallo, E–G rosso.'];
+  let domanda = 'AB'.includes(cw) ? null : 'Chiedere al progettista dati dei costruttori e alternative di raffreddamento con meno acqua.';
+  if (derivazione) {
+    note.push(`Prelievo da ${FONTI_ACQUA[inp.fonteAcqua]}: serve una concessione di derivazione; il prelievo di picco conta quanto il totale annuo.` +
+      (inp.fonteAcqua === 'pozzi' ? ' Vedi anche il criterio 7 (falda).' : ''));
+    domanda = `Verificare con Provincia o Regione la concessione di derivazione per circa ${fmt(r.waterPeakM3h, 1)} m³/h di picco e ${fmt(r.waterM3)} m³/anno, e l'effetto sulla ${inp.fonteAcqua === 'pozzi' ? 'falda' : 'portata del corpo idrico'}.`;
+  } else if (usaAcqua && inp.fonteAcqua === 'non_nota' && r.waterM3 > 1000) {
+    note.push("Fonte dell'acqua non indicata: specificarla nel passo 2.");
+    domanda = domanda || "Chiedere al progettista da dove verrà prelevata l'acqua di raffreddamento (acquedotto, pozzi, acque superficiali).";
+  }
+  return { id: 14, stato,
+    valore: `WUE ${fmt3(r.wue)} L/kWh (classe ${cw}) · PUE ${fmt2(r.pue)} · acqua diretta ${fmt(r.waterM3)} m³/anno` +
+      (usaAcqua ? `, picco ${fmt(r.waterPeakM3h, 1)} m³/h, fonte: ${FONTI_ACQUA[inp.fonteAcqua]}` : ''),
+    fonte: 'engine.js · ' + climaFonte(inp), data_fonte: null, nota: note.join(' '), domanda };
+}
+
 function rigaCriteri() {
   const righe = {};
   // 1: superficie (dalla sezione Il sito)
@@ -829,8 +919,9 @@ function rigaCriteri() {
   const m2mw = tot > 0 && mw > 0 ? tot / mw : NaN;
   const [c1] = semaforoSuperficie(m2mw);
   righe[1] = { id: 1, stato: c1, valore: isNaN(m2mw) ? 'scegli le particelle' : `${fmt(m2mw)} m²/MW (${fmt(tot)} m² per ${fmt(mw, 1)} MW)`,
-    fonte: sito.meta ? sito.meta.fonte : 'Catasto (Agenzia delle Entrate)', data_fonte: lista.length ? [...new Set(lista.map(p => p.foglio_aggiornato_al))].join(', ') : null,
-    nota: 'Superficie grafica dal confine catastale. Soglie: ≥1.000 verde, 600–1.000 giallo, <600 rosso.' + avvisoFoglioRecente(lista),
+    fonte: lista.length && lista.every(p => p.perimetro) ? 'perimetro disegnato dall\'utente' : (sito.meta ? sito.meta.fonte : 'Catasto (Agenzia delle Entrate)') + (lista.some(p => p.perimetro) ? ' + perimetro disegnato' : ''),
+    data_fonte: lista.length ? [...new Set(lista.map(p => p.foglio_aggiornato_al).filter(Boolean))].join(', ') || null : null,
+    nota: (lista.some(p => p.perimetro) ? 'Comprende perimetri disegnati a mano: superficie indicativa. ' : 'Superficie grafica dal confine catastale. ') + 'Soglie: ≥1.000 verde, 600–1.000 giallo, <600 rosso.' + avvisoFoglioRecente(lista),
     domanda: c1 !== 'verde' ? 'Verificare se la superficie basta per edifici, sottostazione, serbatoi e distanze di rispetto.' : null };
   // automatici
   if (ctrl.auto) ctrl.auto.criteri.forEach(c => { righe[c.id] = c; });
@@ -846,11 +937,7 @@ function rigaCriteri() {
   }
   // 14: clima, acqua, energia (dal calcolo)
   if (last) {
-    const cw = classWUE(last.r.wue);
-    righe[14] = { id: 14, stato: 'AB'.includes(cw) ? 'verde' : 'CD'.includes(cw) ? 'giallo' : 'rosso',
-      valore: `WUE ${fmt3(last.r.wue)} L/kWh (classe ${cw}) · PUE ${fmt2(last.r.pue)} · acqua diretta ${fmt(last.r.waterM3)} m³/anno`,
-      fonte: 'engine.js · ' + climaFonte(last.inp), data_fonte: null, nota: 'Classi WUE della bozza di etichetta UE: A–B verde, C–D giallo, E–G rosso.',
-      domanda: 'AB'.includes(cw) ? null : 'Chiedere al progettista dati dei costruttori e alternative di raffreddamento con meno acqua.' };
+    righe[14] = criterio14(last.r, last.inp);
   }
   return Array.from({ length: 14 }, (_, i) => righe[i + 1] || { id: i + 1, stato: 'grigio', valore: ctrl.inCorso ? 'in corso…' : 'controllo non ancora eseguito', fonte: '', nota: '' });
 }
@@ -991,7 +1078,8 @@ function datiScheda() {
     calcolo: { pue: r.pue, classePUE: classPUE(r.pue), pueMin: r.pueMin, pueMax: r.pueMax, pueOraPeggiore: r.pueHourMax,
       wue: r.wue, classeWUE: classWUE(r.wue), itGWh: r.itMWh / 1000, totGWh: r.totMWh / 1000, acquaM3: r.waterM3,
       acquaMin: r.waterMin, acquaMax: r.waterMax, indirettaM3: r.indirM3, fattoreRete: r.gridF, impronta: r.footprint,
-      quotaIndiretta: r.indShare, caloreGWh: r.heatMWh / 1000, temperaturaCalore: SYS[state.sysKey].heatT },
+      quotaIndiretta: r.indShare, caloreGWh: r.heatMWh / 1000, temperaturaCalore: SYS[state.sysKey].heatT,
+      piccoM3h: r.waterPeakM3h, fonteAcqua: FONTI_ACQUA[inp.fonteAcqua] },
   };
 }
 
@@ -1055,6 +1143,7 @@ $('site').addEventListener('change', () => {
 $('it-mw').addEventListener('input', () => { if (sito.mappa) disegnaSito(); });
 ['prj-name', 'it-mw', 'load', 'pv', 'e-decl', 'hydro-evap', 'sd', 'years'].forEach(id => $(id).addEventListener('input', schedule));
 $('hydro-evap').addEventListener('change', schedule);
+$('acqua-fonte').addEventListener('change', schedule);
 
 const TUSCIA = { name: 'Esempio: data center 5 MW, area Civita Castellana', site: 'viterbo', lat: 42.296, lon: 12.410, itMW: 5, load: 70, sys: 'aria_adiab', pv: 5,
   tag: 'Esempio ipotetico · Tuscia 5 MW' };
