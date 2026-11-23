@@ -3,7 +3,7 @@
 Contiene la pagina, il motore di calcolo e il caso Magenta (ex Novaceta) "registrato" dalla cache del
 programma locale: particelle del foglio 4, clima reale PVGIS (Magenta e Rho-Pero), controlli del lotto,
 ortofoto e foto di esempio. Le richieste al programma locale vengono servite da questi dati.
-Serve internet solo per lo sfondo della mappa (OpenStreetMap) e la libreria della mappa.
+Funziona anche senza internet: libreria della mappa e foto aerea di sfondo sono dentro il file (OpenStreetMap è facoltativo).
 
 Uso, dalla cartella del progetto:  python3 strumenti/crea_demo.py
 Risultato: esempi/demo_passaporto_magenta.html
@@ -102,12 +102,32 @@ def main():
     }
     meta_foto, files_foto = foto_demo()
     demo["foto_meta"], demo["foto_file"] = meta_foto, files_foto
+    # Sfondo della mappa senza internet: foto aerea 2012 del lotto e dintorni (la stessa della foto di esempio n. 1)
+    m1 = meta_foto[0]
+    demo["sfondo"] = {"immagine": "data:image/jpeg;base64," + files_foto[m1["file"]], "riquadro": m1["riquadro_lat_lon"],
+                      "attribuzione": "Foto aerea 2012 © Geoportale Nazionale MASE"}
 
     html = (ROOT / "frontend" / "index.html").read_text(encoding="utf-8")
     for nome, path in [("engine.js", ROOT / "engine.js"), ("dati.js", ROOT / "dati.js"), ("casi.js", ROOT / "casi.js"),
                        ("scheda.js", ROOT / "frontend" / "scheda.js")]:
         codice = path.read_text(encoding="utf-8").replace("</script", "<\\/script")
         html = html.replace(f'<script src="{nome}"></script>', f"<script>\n{codice}\n</script>")
+    # Libreria della mappa dentro il file (nessun download da internet: funziona anche nelle anteprime e offline)
+    vendor = ROOT / "strumenti" / "vendor" / "leaflet-1.9.4"
+    css = (vendor / "leaflet.min.css").read_text(encoding="utf-8")
+    for img in ("layers.png", "layers-2x.png"):
+        css = css.replace(f"url(images/{img})", "url(data:image/png;base64," + base64.b64encode((vendor / "images" / img).read_bytes()).decode() + ")")
+    css = css.replace("url(images/marker-icon.png)", "none")
+    html = html.replace('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">', f"<style>\n{css}\n</style>")
+    js = (vendor / "leaflet.min.js").read_text(encoding="utf-8").replace("</script", "<\\/script")
+    html = html.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>', f"<script>\n{js}\n</script>")
+    assert "cdnjs" not in html, "riferimenti esterni alla libreria della mappa rimasti nel file"
+    # All'apertura la demo parte dal caso Magenta
+    html = html.replace("setProject(TUSCIA);\nrenderChecks();", "setProject(MAGENTA);\nrenderChecks();")
+    # il pulsante Cerca trova subito tutto il lotto ex Novaceta (15 particelle del foglio 4)
+    html = html.replace("catasto: { comune: 'Magenta', prov: 'MI', foglio: 4, part: '211' }",
+                        "catasto: { comune: 'Magenta', prov: 'MI', foglio: 4, part: '37,42,166,206,207,210,211,212,213,214,218,219,237,242,243' }")
+    assert "part: '37,42,166" in html
     intercetta = (ROOT / "strumenti" / "demo_fetch.js").read_text(encoding="utf-8")
     dati = json.dumps(demo, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     blocco = f"<script>\nconst DEMO = {dati};\n</script>\n<script>\n{intercetta}\n</script>\n"
@@ -116,11 +136,27 @@ def main():
     html = html[:i] + blocco + html[i:]
     banner = ('<div class="demo-banner" role="note"><b>Versione dimostrativa</b> · funziona senza installare nulla. '
               'Il caso <b>Magenta (ex Novaceta)</b> è registrato con i dati raccolti il 23/11/2026: premi '
-              '<i>Caso reale: Magenta (SIA)</i>, poi <i>Cerca</i>, e segui i 4 passi. Potenza, raffreddamento e fonte dell\'acqua '
-              'si possono cambiare. Per altri siti serve la versione completa (programma locale). Serve internet per lo sfondo della mappa.</div>')
+              '<i>Cerca</i> nel passo 1 e segui i 4 passi. Potenza, raffreddamento e fonte dell\'acqua '
+              'si possono cambiare. Per altri siti serve la versione completa (programma locale). Funziona anche senza internet.</div>')
     html = html.replace('<div class="wrap">', '<div class="wrap">\n' + banner, 1)
     html = html.replace("</style>", "  .demo-banner { border: 2px solid var(--water); background: var(--water-soft); color: var(--fg); "
                                     "border-radius: 8px; padding: 10px 14px; margin: 0 0 14px; font-size: 14px; }\n</style>", 1)
+    # Dopo l'avvio della pagina: foto aerea come sfondo predefinito, OpenStreetMap come alternativa
+    html += """
+<script>
+(function () {
+  const m = sito.mappa; if (!m) return;
+  let osm = null; m.eachLayer(l => { if (l instanceof L.TileLayer) osm = l; });
+  m.createPane('sfondo'); m.getPane('sfondo').style.zIndex = 250;
+  const [s, w, n, e] = DEMO.sfondo.riquadro;
+  const foto = L.imageOverlay(DEMO.sfondo.immagine, [[s, w], [n, e]], { pane: 'sfondo', attribution: DEMO.sfondo.attribuzione });
+  foto.addTo(m); if (osm) m.removeLayer(osm);
+  L.control.layers({ 'Foto aerea 2012 (nel file, anche senza internet)': foto, 'OpenStreetMap (serve internet)': osm || L.layerGroup() },
+                   {}, { collapsed: false, position: 'topright' }).addTo(m);
+  m.fitBounds([[s, w], [n, e]]);
+})();
+</script>
+"""
     OUT.write_text(html, encoding="utf-8")
     print(f"Creato {OUT} ({OUT.stat().st_size / 1e6:.1f} MB), {len(parts)} particelle registrate")
 
