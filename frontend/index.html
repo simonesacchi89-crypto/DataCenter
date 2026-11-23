@@ -812,6 +812,15 @@ async function eseguiControlli() {
   } finally { ctrl.inCorso = false; $('btn-controlli').disabled = false; renderControlli(); aggiornaPassi(); }
 }
 
+// Caso Liscate (23/11/2026): il foglio era stato aggiornato dopo la VIA e le particelle frazionate e rinumerate.
+function avvisoFoglioRecente(lista) {
+  const recenti = [...new Set(lista.map(p => p.foglio_aggiornato_al).filter(d => {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d || ''); if (!m) return false;
+    return (Date.now() - new Date(+m[3], +m[2] - 1, +m[1]).getTime()) < 365 * 86400e3;
+  }))];
+  return recenti.length ? ` Attenzione: foglio aggiornato di recente (${recenti.join(', ')}): numeri e confini delle particelle possono essere cambiati rispetto a documenti più vecchi (frazionamenti). Confrontare con una visura aggiornata.` : '';
+}
+
 function rigaCriteri() {
   const righe = {};
   // 1: superficie (dalla sezione Il sito)
@@ -821,7 +830,7 @@ function rigaCriteri() {
   const [c1] = semaforoSuperficie(m2mw);
   righe[1] = { id: 1, stato: c1, valore: isNaN(m2mw) ? 'scegli le particelle' : `${fmt(m2mw)} m²/MW (${fmt(tot)} m² per ${fmt(mw, 1)} MW)`,
     fonte: sito.meta ? sito.meta.fonte : 'Catasto (Agenzia delle Entrate)', data_fonte: lista.length ? [...new Set(lista.map(p => p.foglio_aggiornato_al))].join(', ') : null,
-    nota: 'Superficie grafica dal confine catastale. Soglie: ≥1.000 verde, 600–1.000 giallo, <600 rosso.',
+    nota: 'Superficie grafica dal confine catastale. Soglie: ≥1.000 verde, 600–1.000 giallo, <600 rosso.' + avvisoFoglioRecente(lista),
     domanda: c1 !== 'verde' ? 'Verificare se la superficie basta per edifici, sottostazione, serbatoi e distanze di rispetto.' : null };
   // automatici
   if (ctrl.auto) ctrl.auto.criteri.forEach(c => { righe[c.id] = c; });

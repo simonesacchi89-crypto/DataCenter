@@ -232,3 +232,6 @@ Simone ha scelto di **non usare servizi di intelligenza artificiale a pagamento*
 - Trovati e verificati 5 casi con documenti pubblici sul portale VIA del Ministero dell'Ambiente (più uno di riserva): Liscate, Bornasco, Settimo Milanese (Microsoft MIL03), Zibido San Giacomo (Amazon), Vimercate; riserva Lacchiarella. Elenco, link e cosa estrarre in `CASI_TEST.md`.
 - Limite: tutti in Lombardia. Fuori regione nessuna procedura statale trovata.
 - Prossimo passo proposto: per ogni caso ricavare dai documenti i dati di riferimento e confrontarli con quello che trova lo strumento, per tarare le soglie.
+
+## 23 novembre 2026 – Caso 1: Liscate
+Confronto completo in `CASI_TEST.md`. In sintesi: particelle trovate, ma superficie diversa perché il foglio è stato aggiornato il 09/11/2026 (frazionamento dopo la VIA); falda meno prudente del SIA; secondo caso con screening Natura 2000 richiesto a 3–4 km; acqua diretta e classe WUE coerenti; acqua indiretta oltre il 99%. Il Geoportale Nazionale era fuori servizio ("Database connection failed"): criteri correttamente grigi. Aggiunto l'avviso "foglio aggiornato di recente" nel criterio 1.
