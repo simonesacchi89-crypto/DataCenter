@@ -235,3 +235,8 @@ Simone ha scelto di **non usare servizi di intelligenza artificiale a pagamento*
 
 ## 23 novembre 2026 – Caso 1: Liscate
 Confronto completo in `CASI_TEST.md`. In sintesi: particelle trovate, ma superficie diversa perché il foglio è stato aggiornato il 09/11/2026 (frazionamento dopo la VIA); falda meno prudente del SIA; secondo caso con screening Natura 2000 richiesto a 3–4 km; acqua diretta e classe WUE coerenti; acqua indiretta oltre il 99%. Il Geoportale Nazionale era fuori servizio ("Database connection failed"): criteri correttamente grigi. Aggiunto l'avviso "foglio aggiornato di recente" nel criterio 1.
+
+## 23 novembre 2026 – Taratura Natura 2000 e Caso 2: Bornasco
+- **Taratura (decisa da Claude su delega di Simone):** criterio 11 giallo fino a **5 km** (prima 1 km), perché a Magenta (3,4 km) e Liscate (3,8 km) lo screening di incidenza è stato chiesto. Rosso resta "lotto dentro il sito". `SPEC.md` non modificato: la taratura è registrata qui e in `backend/controlli.py`.
+- **Bornasco** (Microsoft MIL05, escluso dalla VIA): confronto in `CASI_TEST.md`. Particelle 31, 32, 372 non più esistenti (frazionate dopo l'intervento), la 370 torna (+1,3%); vincoli entro 500 m trovati dallo strumento; falda a 3,2–3,4 m; raffreddamento con acqua di falda (81 m³/h di picco), che il modello non distingue.
+- Il 23/11 il **Geoportale Nazionale era fuori servizio** ("Database connection failed"): i test dal vivo su Natura 2000, sismica ed EUAP falliscono finché il servizio non torna. È un guasto della fonte, non del codice.

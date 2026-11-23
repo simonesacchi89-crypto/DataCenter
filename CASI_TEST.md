@@ -53,3 +53,29 @@ Documenti usati (portale VIA, procedura 10758): relazione VIA (doc. 1117675, 111
 2. **Falda**: il dato di Città Metropolitana (classi indicative) può essere più ottimista dei rilievi del SIA. Tenere la proposta come modificabile e chiedere sempre i piezometri.
 3. **Natura 2000**: a Magenta (3,4 km) e a Liscate (3,8 km) è stato chiesto lo screening di incidenza. La soglia di 1 km di SPEC sembra troppo stretta: proposta da discutere, giallo fino a 5 km.
 4. **Servizi pubblici**: il 23/11 il Geoportale Nazionale era fuori servizio; lo strumento ha messo correttamente i criteri in grigio, non in verde.
+
+---
+
+## Caso 2 – Bornasco (PV), Microsoft "MIL05": confronto documenti ufficiali / strumento (23/11/2026)
+
+Documenti usati (portale VIA, oggetto 8791): decreto direttoriale del 20/07/2023 (doc. 873141) e parere della Commissione tecnica VIA n. 751 del 29/05/2023 (873142), relazione tecnica delle integrazioni (821621), parere ARPA Lombardia (985661). Esito: **verifica di assoggettabilità – non sottoposto a VIA**, con prescrizioni (ottemperanza conclusa il 13/05/2025).
+
+| Aspetto | Documenti ufficiali | Strumento | Esito |
+|---|---|---|---|
+| Particelle | foglio 14: 31 (61.375 m²), 32 (93.858), 370 (2.773, fuori comparto), 372 (7.345); totale 165.351 m² | trovata solo la **370** (2.810 m², **+1,3%**); 31, 32 e 372 **non esistono più** | ❌ foglio aggiornato il 07/05/2026: dopo l'intervento le particelle sono state frazionate (oggi 388, 389, 391, 392, 396, 398…). Seconda conferma del problema visto a Liscate |
+| Superficie / m²/MW | circa 16 ha; potenza IT non indicata nei documenti letti (generatori: 61,5 MW termici nella prima fase) | non calcolabile | – |
+| Urbanistica | ambito di trasformazione produttivo ATP1 del PGT, oggi seminativo, in Rete Ecologica Regionale | manuale | giallo/verde da inserire a mano |
+| Vincoli | "non sono presenti elementi assoggettati alla tutela del Codice dei Beni Culturali e del Paesaggio" sull'area; parere del Ministero della Cultura agli atti | vincolo art. 136 "Paesaggio naturale e rurale, intero territorio di Zeccone" a **36 m**; area boscata (art. 142 g) a **3 m**; Parco Visconteo (art. 136) a 423 m (misure dalla particella 370, vicina al lotto) | ⚠️ coerente: nessun vincolo sul lotto, ma vincoli **entro 500 m** → giallo; lo strumento li elenca, i documenti letti no |
+| Idraulica / frane | il reticolo idrico minore attraversa il sito (classe di fattibilità 4c lungo i corsi d'acqua) | nessuna pericolosità (mosaicatura ISPRA) | ⚠️ ISPRA non vede il reticolo minore: va detto nella nota |
+| Falda | **3,2–3,4 m** dal piano campagna → rosso | manuale (fuori dalla Città Metropolitana di Milano) | da inserire: rosso |
+| Rete elettrica | elettrodotti di alta tensione ai margini del comune; linea che attraversa il sito | grigio (Overpass) | atteso verde |
+| Vicini | abitazioni a circa **200 m** (Zeccone) | grigio (Overpass) | atteso giallo |
+| Natura 2000 | Riserva Garzaia di Porta Chiosa (SIC/ZSC/ZPS) a **1,7 km**; Garzaia della Carola a 3,3 km; screening di incidenza svolto | grigio (Geoportale fuori servizio) | con la nuova soglia di 5 km sarebbe **giallo**: coerente |
+| Sismica | zona 3 | grigio (Geoportale fuori servizio) | atteso verde |
+| Acqua | raffreddamento con acqua di **prima falda da 5 pozzi**, prelievo massimo **81 m³/h** (22,5 l/s), più acqua piovana recuperata; consumo annuo non indicato nei documenti letti | il modello non distingue la **fonte** dell'acqua (pozzi o acquedotto) | ⚠️ limite del modello: aggiungere "fonte dell'acqua" e il prelievo di picco |
+
+### Cosa insegna
+1. **Particelle rinumerate dopo l'autorizzazione** (secondo caso su due): lo strumento è pensato per siti *prima* del progetto, ma per verificare progetti già autorizzati servono i confini dei documenti, non i numeri di particella. Possibile miglioramento: caricare il perimetro del progetto (disegno o file) invece dei numeri.
+2. **Vincoli entro 500 m**: lo strumento trova elementi vicini che i documenti non riportano per il lotto. È il comportamento voluto (prudente).
+3. **Reticolo idrico minore**: la pericolosità idraulica ISPRA non comprende le rogge; aggiungere la nota.
+4. **Fonte dell'acqua**: in Lombardia il raffreddamento con acqua di falda è frequente; il criterio 14 dovrebbe chiederla.

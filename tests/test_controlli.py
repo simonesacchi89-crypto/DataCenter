@@ -77,7 +77,10 @@ def test_rete_novaceta(cache_temporanea, monkeypatch):
     c = {x["id"]: x for x in r["criteri"]}
     assert r["comune"]["nome"] == "Magenta"
     assert c[4]["stato"] == "verde" and c[5]["stato"] == "verde"
-    assert c[11]["stato"] == "verde" and "Boschi della Fagiana" in c[11]["dettagli"][0]
+    # dopo la taratura del 23/11/2026: siti tra 1 e 5 km → giallo (se il Geoportale risponde)
+    assert c[11]["stato"] in ("giallo", "grigio")
+    if c[11]["stato"] == "giallo":
+        assert "Boschi della Fagiana" in c[11]["dettagli"][0]
     assert c[12]["stato"] == "verde" and "zona 4" in c[12]["valore"]
     assert c[3]["stato"] in ("verde", "giallo")
     assert c[8]["stato"] == "grigio" and c[9]["stato"] == "giallo"

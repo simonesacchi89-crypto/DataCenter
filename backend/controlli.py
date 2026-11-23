@@ -223,7 +223,7 @@ def c4_c5_idrogeo(lotto: Lotto):
 # ---------------- criterio 11: Natura 2000 ----------------
 
 def c11_natura2000(lotto: Lotto):
-    crit, fonte = "Aree Natura 2000 (entro 1 km)", "Geoportale Nazionale MASE – SIC/ZSC/ZPS (WFS)"
+    crit, fonte = "Aree Natura 2000 (entro 5 km)", "Geoportale Nazionale MASE – SIC/ZSC/ZPS (WFS)"
     url = PCN_WFS.format(m="SIC_ZSC_ZPS")
     try:
         feats = _pcn_wfs("SIC_ZSC_ZPS", "SP.SITIPROTETTI.SIC_ZSC_ZPS", *lotto.riquadro(5000))
@@ -238,12 +238,16 @@ def c11_natura2000(lotto: Lotto):
     if siti and siti[0][0] == 0:
         return esito(11, crit, "rosso", "lotto dentro un sito Natura 2000", fonte, url, agg, dettagli=det,
                      domanda="Serve la Valutazione di incidenza appropriata: chiedere all'ente gestore.")
+    # Taratura del 23/11/2026 (CASI_TEST.md): a Magenta (3,4 km) e Liscate (3,8 km) lo screening di incidenza
+    # è stato chiesto anche oltre 1 km. Soglia del giallo portata da 1 a 5 km (SPEC indicava 1 km).
+    domanda = "Chiedere all'ente gestore se è richiesta la Valutazione di incidenza (screening)."
     if siti and siti[0][0] <= 1000:
-        return esito(11, crit, "giallo", f"sito a {_m(siti[0][0])}", fonte, url, agg, "Serve lo screening di incidenza.", det,
-                     domanda="Chiedere all'ente gestore se è richiesta la Valutazione di incidenza (screening).")
-    val = f"nessun sito entro 1 km (il più vicino a {_m(siti[0][0])})" if siti else "nessun sito entro 5 km"
-    return esito(11, crit, "verde", val, fonte, url, agg,
-                 "Anche oltre 1 km l'autorità può chiedere lo screening di incidenza (a Magenta è stato presentato).", det)
+        return esito(11, crit, "giallo", f"sito a {_m(siti[0][0])}", fonte, url, agg, "Entro 1 km: screening di incidenza quasi certo.",
+                     det, domanda)
+    if siti:
+        return esito(11, crit, "giallo", f"sito a {_m(siti[0][0])} (entro 5 km)", fonte, url, agg,
+                     "Tra 1 e 5 km lo screening di incidenza è spesso richiesto (casi Magenta 3,4 km e Liscate 3,8 km).", det, domanda)
+    return esito(11, crit, "verde", "nessun sito entro 5 km", fonte, url, agg, "", det)
 
 
 # ---------------- criterio 12: sismica ----------------
