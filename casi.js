@@ -1,7 +1,8 @@
 // Casi di test di SPEC §7, calcolati su un insieme di anni orari qualsiasi
 // (anni sintetici da medie mensili oppure anno tipo PVGIS). Parametri identici a calcolatore.html.
-const E = typeof require !== 'undefined' ? require('./engine.js') : globalThis;
-const D = typeof require !== 'undefined' ? require('./dati.js') : globalThis;
+// In Node si caricano i moduli; nel browser engine.js e dati.js sono già caricati come script.
+const E = typeof require !== 'undefined' ? require('./engine.js') : { simulate, simulateMultiHours, hoursAboveHours, gridFactor };
+const D = typeof require !== 'undefined' ? require('./dati.js') : { SYS, COMMON0, MIX0, F0 };
 
 function calcolaCasi(years) {
   const { simulateMultiHours, hoursAboveHours, gridFactor } = E;
@@ -45,4 +46,33 @@ function verificaCasi(r) {
   ];
 }
 
-if (typeof module !== 'undefined') module.exports = { calcolaCasi, verificaCasi };
+// Casi reali da confrontare con il clima reale PVGIS (19 anni) del proprio sito.
+// Decisione del 23/11/2026: le soglie dei sistemi NON vengono ritarate; si mostra dove cade
+// il dato pubblicato nella forbice degli anni reali (in quanti anni viene raggiunto).
+const CASI_REALI = [
+  { id: 'aws', nome: 'AWS Rho-Pero – aria diretta + evaporativo', sito: 'Rho-Pero', lat: 45.510, lon: 9.087,
+    sys: 'diretta', extra: { itMW: 79, load: 1 }, pubblicato: 50000, fonteDato: 'VIA' },
+  { id: 'mg_adiab', nome: 'Magenta – adiabatico, acqua sopra 29 °C (scartato)', sito: 'Magenta', lat: 45.467, lon: 8.874,
+    sys: 'aria_adiab', extra: { tSwitch: 29, itMW: 240, load: 1 }, pubblicato: 200000, fonteDato: 'SIA' },
+  { id: 'mg_hyb25', nome: 'Magenta – hybrid cooler, bagnato sopra 25 °C (scartato)', sito: 'Magenta', lat: 45.467, lon: 8.874,
+    sys: 'torri', extra: { tDry: 25, itMW: 240, load: 1 }, pubblicato: 500000, fonteDato: 'SIA' },
+  { id: 'mg_hyb26', nome: 'Magenta – hybrid cooler, bagnato sopra 26 °C (scartato)', sito: 'Magenta', lat: 45.467, lon: 8.874,
+    sys: 'torri', extra: { tDry: 26, itMW: 240, load: 1 }, pubblicato: 500000, fonteDato: 'SIA' },
+];
+
+// years: anni orari (da yearsFromPVGIS); etichette: i nomi degli anni (es. '2005'…'2023')
+function confrontoAnniReali(caso, years, etichette) {
+  const { simulate } = E;
+  const { SYS, COMMON0 } = D;
+  const p = Object.assign({}, COMMON0, SYS[caso.sys].p, caso.extra);
+  const acqua = years.map(H => simulate(p, H).waterM3);
+  const anniSopra = etichette.filter((_, i) => acqua[i] >= caso.pubblicato);
+  return {
+    media: acqua.reduce((a, b) => a + b, 0) / acqua.length,
+    min: Math.min(...acqua), max: Math.max(...acqua),
+    pubblicato: caso.pubblicato, anniSopra, nAnni: acqua.length,
+    dentroForbice: caso.pubblicato >= Math.min(...acqua) && caso.pubblicato <= Math.max(...acqua),
+  };
+}
+
+if (typeof module !== 'undefined') module.exports = { calcolaCasi, verificaCasi, CASI_REALI, confrontoAnniReali };

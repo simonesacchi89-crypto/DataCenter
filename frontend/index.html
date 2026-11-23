@@ -95,6 +95,11 @@ table.cmp tr.sel td { background: var(--water-soft); }
 textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: 12px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   #btn-pvgis { margin-top: 6px; }
+  #check-reali { grid-column: 1 / -1; }
+  .tbl-reali { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl-reali th, .tbl-reali td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tbl-reali td.n { text-align: right; font-family: var(--f-mono); white-space: nowrap; }
+  .tbl-reali th { font-weight: 600; color: var(--muted); font-size: 12px; }
   #pvgis-status { display: block; margin-top: 6px; }
   .ok-txt { color: var(--water); }
   .warn-txt { color: var(--heat); }
@@ -243,6 +248,7 @@ textarea#summary-fallback { width: 100%; min-height: 120px; font-family: var(--f
 
 <script src="engine.js"></script>
 <script src="dati.js"></script>
+<script src="casi.js"></script>
 <script>
 
 
@@ -503,6 +509,42 @@ async function caricaPVGIS() {
 }
 $('btn-pvgis').addEventListener('click', caricaPVGIS);
 
+// Confronto dei casi reali con il clima reale PVGIS (19 anni) del loro sito.
+// Decisione 23/11/2026: soglie non ritarate; si mostra dove cade il dato pubblicato nella forbice.
+async function renderChecksReali() {
+  const box = document.createElement('div');
+  box.className = 'check'; box.id = 'check-reali';
+  box.innerHTML = '<span class="eyebrow">Clima reale PVGIS 2005–2023 · sito di ciascun caso</span><h3>I dati pubblicati negli anni veri</h3><p class="note">Carico il clima reale…</p>';
+  $('checks').appendChild(box);
+  const siti = {};
+  try {
+    for (const c of CASI_REALI) {
+      const k = c.lat + ',' + c.lon;
+      if (!siti[k]) {
+        const res = await fetch(`/api/clima?lat=${c.lat}&lon=${c.lon}`);
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.detail || res.status);
+        const et = Object.keys(d.anni).sort();
+        siti[k] = { years: yearsFromPVGIS(d.ore, d.anni), et, meta: d };
+      }
+    }
+  } catch (e) {
+    box.querySelector('.note').textContent = 'Confronto col clima reale non disponibile (' + (e instanceof TypeError ? 'programma locale non avviato' : e.message) + '): da verificare.';
+    return;
+  }
+  let rows = '';
+  for (const c of CASI_REALI) {
+    const s = siti[c.lat + ',' + c.lon];
+    const r = confrontoAnniReali(c, s.years, s.et);
+    rows += `<tr><td>${c.nome}</td><td class="n">${fmt(c.pubblicato)} (${c.fonteDato})</td><td class="n">${fmt(r.media)}</td>`
+      + `<td class="n">${fmt(r.min)}–${fmt(r.max)}</td><td>${r.anniSopra.length} su ${r.nAnni}${r.anniSopra.length ? ': ' + r.anniSopra.join(', ') : ''}</td></tr>`;
+  }
+  const m = Object.values(siti)[0].meta;
+  box.innerHTML = `<span class="eyebrow">Clima reale PVGIS 2005–2023 · sito di ciascun caso</span><h3>I dati pubblicati negli anni veri</h3>
+    <div class="tbl-wrap"><table class="tbl-reali"><thead><tr><th>Caso</th><th>Acqua pubblicata (m³/anno)</th><th>Modello: media</th><th>Forbice tra anni</th><th>Anni in cui il dato pubblicato è raggiunto</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="note">Con il clima vero del proprio sito il modello, in media, sta sotto i dati pubblicati; i dati pubblicati sono raggiunti nelle estati più calde. Si leggono quindi come valori da anno caldo, non come medie. Le soglie dei sistemi non sono state ritarate (decisione del 23/11/2026). Fonte clima: ${m.fonte}; dati ${m.dati_meteo}; scaricato il ${dataIt(m.scaricato_il)}.</p>`;
+}
+
 function summaryText() {
   const { inp, r } = last;
   const siteName = $('site').selectedOptions[0].textContent;
@@ -553,4 +595,5 @@ $('btn-aws').addEventListener('click', () => setProject(AWS));
 
 setProject(TUSCIA);
 renderChecks();
+renderChecksReali();
 </script>

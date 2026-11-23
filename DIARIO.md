@@ -84,8 +84,23 @@ Lettura:
 - Limite di ERA5: griglia di circa 25 km, sottostima l'isola di calore urbana e i picchi. Rho-Pero e Linate cadono in celle diverse.
 
 ### Cosa resta aperto
-1. **Decisione di Simone:** ritarare le soglie dei preset sul clima reale (es. AWS) o tenere quelle attuali e leggere il dato VIA come anno caldo? Non ho cambiato i parametri.
+1. ~~Decisione di Simone: ritarare le soglie o no?~~ → **Deciso il 23/11/2026: non si ritarano** (vedi sotto).
 2. Umidità: stimata dal punto di rugiada tipico del mese. Nelle ondate di calore l'umidità reale può essere diversa. Se serve più precisione, va trovata una fonte oraria con umidità per tutti gli anni (da verificare come da regole).
 3. Coordinate precise dei siti AWS e Microsoft: per AWS ho usato il centro di Pero (45,510, 9,087); per Microsoft Linate (indirizzo non pubblico).
 4. Licenza formale PVGIS (pagina "Usage Conditions") ancora da leggere.
 5. I controlli "Verifica sui casi reali" della pagina usano ancora il clima sintetico di Milano (sono il riferimento dei test).
+
+### Decisione del 23/11/2026: soglie non ritarate
+Simone ha scelto di **non ritarare** le soglie dei sistemi sul clima reale. Con il clima reale del proprio sito il dato pubblicato si confronta con la forbice dei 19 anni:
+
+| Caso | Pubblicato (m³) | Media modello | Forbice 2005–2023 | Anni in cui è raggiunto |
+|---|---|---|---|---|
+| AWS Rho-Pero, aria diretta | 50.000 (VIA) | 35.424 | 11.530–73.951 | 3 su 19: 2006, 2015, 2022 |
+| Magenta adiabatico >29 °C | 200.000 (SIA) | 148.597 | 42.772–321.258 | 2 su 19: 2006, 2022 |
+| Magenta hybrid >25 °C | 500.000 (SIA) | 446.044 | 220.674–670.232 | 4 su 19: 2017, 2019, 2022, 2023 |
+| Magenta hybrid >26 °C | 500.000 (SIA) | 355.299 | 153.825–570.833 | 1 su 19: 2022 |
+
+I dati pubblicati si leggono come **valori da anno caldo** (2006, 2015 e 2022 sono estati notoriamente calde), non come medie.
+- **Nuovo criterio di test col clima reale:** il dato pubblicato deve stare dentro la forbice degli anni reali ed essere raggiunto almeno in un anno. I test col clima sintetico restano con le tolleranze di SPEC §7. In totale 16 test, tutti verdi.
+- I dati PVGIS di Magenta e Rho-Pero sono salvati in `tests/fixtures/` (scaricati il 23/11/2026), così i test funzionano anche senza rete.
+- La pagina mostra la tabella "I dati pubblicati negli anni veri" nella sezione di verifica, se il programma locale è avviato.

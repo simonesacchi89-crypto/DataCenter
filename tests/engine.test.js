@@ -36,3 +36,19 @@ test('hoursFromPVGIS: mese, umidità limitata, bulbo umido ≤ temperatura', () 
   assert.strictEqual(h[1].RH, 100);
   assert.ok(h[0].Twb < h[0].T && h[0].Twb > 20 && h[0].Twb < 23);
 });
+
+// Clima reale PVGIS (19 anni 2005–2023, copia salvata in tests/fixtures il 23/11/2026).
+// Criterio deciso il 23/11/2026: il dato pubblicato deve stare dentro la forbice degli anni reali.
+const fs = require('node:fs');
+const { CASI_REALI, confrontoAnniReali } = require(path.join(__dirname, '..', 'casi.js'));
+const FIX = path.join(__dirname, 'fixtures');
+for (const caso of CASI_REALI) {
+  test(`clima reale PVGIS ${caso.sito} – ${caso.nome}: dato ${caso.fonteDato} dentro la forbice`, () => {
+    const k = `${caso.lat.toFixed(3)}_${caso.lon.toFixed(3)}`;
+    const serie = JSON.parse(fs.readFileSync(path.join(FIX, `serie_${k}.json`), 'utf8'));
+    const tmy = JSON.parse(fs.readFileSync(path.join(FIX, `tmy_${k}.json`), 'utf8')).ore;
+    const r = confrontoAnniReali(caso, E.yearsFromPVGIS(tmy, serie), Object.keys(serie).sort());
+    assert.ok(r.dentroForbice, `forbice ${Math.round(r.min)}–${Math.round(r.max)}, pubblicato ${r.pubblicato}`);
+    assert.ok(r.anniSopra.length >= 1, 'il dato pubblicato non è mai raggiunto');
+  });
+}
