@@ -79,3 +79,47 @@ Documenti usati (portale VIA, oggetto 8791): decreto direttoriale del 20/07/2023
 2. **Vincoli entro 500 m**: lo strumento trova elementi vicini che i documenti non riportano per il lotto. È il comportamento voluto (prudente).
 3. **Reticolo idrico minore**: la pericolosità idraulica ISPRA non comprende le rogge; aggiungere la nota.
 4. **Fonte dell'acqua**: in Lombardia il raffreddamento con acqua di falda è frequente; il criterio 14 dovrebbe chiederla.
+
+---
+
+## Caso 3 – Vimercate (MB), campus ex IBM: confronto documenti ufficiali / strumento (23/11/2026)
+
+Procedura VIA in istruttoria (oggetto 11813, 289 documenti). Documenti usati: sintesi non tecnica (doc. 1400562), Studio di Impatto Ambientale di settembre 2026 (1438137), screening di incidenza (1400547), relazione geologica (1400571), parere del Comune di Vimercate del 28/10/2026 (1442015) e controdeduzioni (1452113).
+
+| Aspetto | Documenti ufficiali | Strumento | Esito |
+|---|---|---|---|
+| Particelle | 41 particelle sui fogli 6, 7, 22 e 23 (elenco nel parere del Comune) | **40 su 41** trovate; manca la 136 del foglio 6 (aggiornato il 13/04/2026) | ✅ |
+| Superficie | superficie territoriale di progetto **193.036 m²**; intervento complessivo **281.094 m²** | somma delle particelle **298.844 m²** (+6% sull'intervento complessivo) | ✅ coerente (superficie grafica; le particelle comprendono anche parcheggi e aree di ricomposizione) |
+| Potenza / m²/MW | **156 MW IT** (DC1 60 + DC2 60 + DC3 36) → 1.237 m²/MW sulla superficie territoriale | 1.916 m²/MW sulle particelle | ✅ verde in entrambi i casi |
+| Urbanistica | ex area industriale IBM; "Ambito di Trasformazione" **in variante al PGT**; variante generale adottata a settembre 2026 | manuale | da inserire: **giallo** (serve variante) |
+| Vincoli | parere del Comune dopo la **Commissione Paesaggio**; richieste su mitigazioni e schermature | vincolo art. 136 **"Nucleo abitato di Oreno… Villa Gallarati Scotti" a 163 m**; aree boscate (art. 142 g) a 25 m | ✅ giallo, coerente con l'attenzione paesaggistica del Comune |
+| Idraulica / frane | nessuna criticità segnalata nei documenti letti | nessuna pericolosità | ✅ |
+| Falda | **7,4–20,8 m**, media circa 15 m (piezometri 2024); oscillazione ±2 m | manuale (nessun dato aperto per la provincia di Monza e Brianza) | da inserire: verde (giallo nella parte sud, 7,4 m) |
+| Siti contaminati | nessuna bonifica citata nei documenti letti | in comune 3 contaminati e 6 bonificati, nessuno è l'area ex IBM | coerente |
+| Rete elettrica | due cavi interrati a 220 kV di **5,7 km** verso la futura stazione Terna di Vimercate | grigio (Overpass) | con le soglie attuali sarebbe giallo (2–10 km) |
+| Natura 2000 | ZSC "Valle S. Croce e Valle del Curone" a **4,3 km**; **screening di incidenza presentato**; pareri dei parchi Valle del Lambro e Montevecchia | grigio (Geoportale fuori servizio) | **terza conferma** della soglia di 5 km: sarebbe giallo |
+| Acqua diretta | chiller ad aria con free cooling, consumo "pressoché nullo": circa **185 m³/anno** (uffici) | stesso sistema; WUE classe **A** | ✅ |
+| Energia | PUE non trovato nei documenti letti | PUE 1,15 (ora peggiore 1,39); 1.578 GWh/anno | – |
+| Acqua indiretta | non considerata | circa **1,06 milioni di m³/anno** (oltre il 99,9% dell'impronta idrica) | informazione che i documenti non danno |
+| Calore | predisposizione al recupero di calore se nascerà un teleriscaldamento a Vimercate | 1.408 GWh termici/anno; teleriscaldamento: informativo | ✅ coerente |
+
+### Cosa insegna
+1. È il caso più vicino all'uso vero (progetto non ancora autorizzato): **particelle e superficie tornano**.
+2. **Vincoli**: lo strumento trova da solo il vincolo sul nucleo storico di Oreno, il tema paesaggistico su cui il Comune ha chiesto approfondimenti.
+3. **Natura 2000**: terzo caso su tre con screening richiesto tra 3 e 5 km: confermata la taratura a 5 km.
+4. Mancano dati aperti sulla **falda** fuori dalla Città Metropolitana di Milano.
+
+---
+
+## Riepilogo dei casi (23/11/2026)
+
+| Criterio | Magenta | Liscate | Bornasco | Vimercate | Giudizio |
+|---|---|---|---|---|---|
+| Particelle trovate | 15/15 | 2/2 (ma frazionate dopo la VIA) | 1/4 (rinumerate dopo l'intervento) | 40/41 | ✅ per siti non ancora trasformati |
+| Superficie | +0,02% | ❌ catasto cambiato | non verificabile | +6% | ✅ quando il catasto non è cambiato |
+| Vincoli entro 500 m | verde (Soprintendenza critica) | bosco a 141 m | art. 136 a 36 m | art. 136 a 163 m | ⚠️ trova i vincoli cartografati, non i pareri |
+| Natura 2000 | 3,4 km, screening | 3,8 km, screening | 1,7 km, screening | 4,3 km, screening | ✅ con la soglia a 5 km |
+| Falda | 5–7,5 m (SIA 3–8) | 5–7,5 m (SIA **3–5**) | manuale (SIA 3,2–3,4) | manuale (SIA 7,4–20,8) | ❌ dato aperto scarso o ottimista |
+| Acqua diretta / WUE | classe A | classe A | raffreddamento con acqua di falda (non modellato) | classe A | ✅ con un limite da colmare |
+| Acqua indiretta | 99% dell'impronta | >99% | – | >99,9% | messaggio costante |
+| Rete elettrica | grigio | grigio (cavidotto 9,9 km) | grigio (linea sul sito) | grigio (cavi 5,7 km) | da provare con Overpass in locale |

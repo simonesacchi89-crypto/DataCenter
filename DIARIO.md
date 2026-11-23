@@ -240,3 +240,7 @@ Confronto completo in `CASI_TEST.md`. In sintesi: particelle trovate, ma superfi
 - **Taratura (decisa da Claude su delega di Simone):** criterio 11 giallo fino a **5 km** (prima 1 km), perché a Magenta (3,4 km) e Liscate (3,8 km) lo screening di incidenza è stato chiesto. Rosso resta "lotto dentro il sito". `SPEC.md` non modificato: la taratura è registrata qui e in `backend/controlli.py`.
 - **Bornasco** (Microsoft MIL05, escluso dalla VIA): confronto in `CASI_TEST.md`. Particelle 31, 32, 372 non più esistenti (frazionate dopo l'intervento), la 370 torna (+1,3%); vincoli entro 500 m trovati dallo strumento; falda a 3,2–3,4 m; raffreddamento con acqua di falda (81 m³/h di picco), che il modello non distingue.
 - Il 23/11 il **Geoportale Nazionale era fuori servizio** ("Database connection failed"): i test dal vivo su Natura 2000, sismica ed EUAP falliscono finché il servizio non torna. È un guasto della fonte, non del codice.
+
+## 23 novembre 2026 – Caso 3: Vimercate
+Confronto in `CASI_TEST.md`, con riepilogo dei quattro casi. Vimercate (in istruttoria) è il caso più vicino all'uso vero: 40/41 particelle trovate, superficie coerente (+6%), vincolo paesaggistico di Oreno trovato a 163 m (tema sollevato dal Comune), terzo caso con screening Natura 2000 tra 3 e 5 km, acqua diretta e classe WUE coerenti (185 m³/anno, classe A). Geoportale Nazionale ancora fuori servizio; Overpass non raggiungibile.
+Restano da fare: Zibido San Giacomo (Amazon) e Settimo Milanese (Microsoft MIL03).
