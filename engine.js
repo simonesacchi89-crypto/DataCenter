@@ -125,7 +125,12 @@ function getYears(clima, sd, n) {
   return _yearCache[key];
 }
 function simulateMulti(p, clima, sd, n) {
-  const runs = getYears(clima, sd, n).map(H => simulate(p, H));
+  return simulateMultiHours(p, getYears(clima, sd, n));
+}
+// Stessa aggregazione di simulateMulti, ma su anni orari forniti dall'esterno
+// (es. un anno meteorologico tipo PVGIS: years = [ore]). Con un solo anno la forbice è nulla.
+function simulateMultiHours(p, years) {
+  const runs = years.map(H => simulate(p, H));
   const avg = k => runs.reduce((s, r) => s + r[k], 0) / runs.length;
   const min = k => Math.min(...runs.map(r => r[k]));
   const max = k => Math.max(...runs.map(r => r[k]));
@@ -143,8 +148,43 @@ function simulateMulti(p, clima, sd, n) {
   return out;
 }
 function hoursAbove(clima, sd, n, T) {
-  const ys = getYears(clima, sd, n);
-  return ys.reduce((s, H) => s + H.filter(h => h.T > T).length, 0) / ys.length;
+  return hoursAboveHours(getYears(clima, sd, n), T);
+}
+function hoursAboveHours(years, T) {
+  return years.reduce((s, H) => s + H.filter(h => h.T > T).length, 0) / years.length;
+}
+
+// Converte le ore dell'anno meteorologico tipo PVGIS (campi 'time(UTC)' AAAAMMGG:hhmm, T2m °C, RH %)
+// nel formato usato da simulate(): {m, T, RH, Twb}. Bulbo umido con la stessa formula di buildYear.
+function hoursFromPVGIS(tmyHourly) {
+  return tmyHourly.map(h => {
+    const T = h.T2m;
+    const RH = clamp(h.RH, 1, 100);
+    const m = parseInt(String(h['time(UTC)']).slice(4, 6), 10) - 1;
+    return { m, T, RH, Twb: Math.min(T, wetBulb(T, RH)) };
+  });
+}
+
+// Anni reali da PVGIS: temperature orarie vere (serie 2005–2023, senza umidità) e, per l'umidità,
+// il punto di rugiada medio per mese e ora del giorno ricavato dall'anno tipo (TMY) dello stesso punto.
+// Stesso criterio di buildYear: rugiada mensile tipica, limitata a T − 0,1 °C.
+// tmyHourly: ore TMY {'time(UTC)', T2m, RH}; anni: {anno: [8760 temperature °C, dall'1/1 ore 0 UTC]}
+function yearsFromPVGIS(tmyHourly, anni) {
+  const sum = Array.from({ length: 12 }, () => new Array(24).fill(0));
+  const cnt = Array.from({ length: 12 }, () => new Array(24).fill(0));
+  for (const h of tmyHourly) {
+    const t = String(h['time(UTC)']);
+    const m = parseInt(t.slice(4, 6), 10) - 1, hr = parseInt(t.slice(9, 11), 10);
+    sum[m][hr] += dewFromRH(h.T2m, clamp(h.RH, 1, 100)); cnt[m][hr] += 1;
+  }
+  const meseOra = [];
+  DAYS.forEach((d, m) => { for (let i = 0; i < d * 24; i++) meseOra.push(m); });
+  return Object.keys(anni).sort().map(y => anni[y].map((T, i) => {
+    const m = meseOra[i], hr = i % 24;
+    const Td = Math.min(sum[m][hr] / cnt[m][hr], T - 0.1);
+    const RH = rhFromDew(T, Td);
+    return { m, T, RH, Twb: Math.min(T, wetBulb(T, RH)) };
+  }));
 }
 
 function gridFactor(mix, f, includeHydroEvap) {
@@ -166,4 +206,4 @@ function gridFactor(mix, f, includeHydroEvap) {
 function classPUE(x) { return x <= 1.15 ? 'A' : x <= 1.25 ? 'B' : x <= 1.35 ? 'C' : x <= 1.5 ? 'D' : x <= 1.7 ? 'E' : x <= 1.9 ? 'F' : 'G'; }
 function classWUE(x) { return x <= 0.1 ? 'A' : x <= 0.2 ? 'B' : x <= 0.4 ? 'C' : x <= 0.6 ? 'D' : x <= 0.8 ? 'E' : x <= 1.0 ? 'F' : 'G'; }
 
-if (typeof module !== 'undefined') module.exports = { buildYear, simulate, simulateMulti, hoursAbove, gridFactor, classPUE, classWUE, L_PER_KWH_HEAT };
+if (typeof module !== 'undefined') module.exports = { buildYear, simulate, simulateMulti, simulateMultiHours, hoursAbove, hoursAboveHours, hoursFromPVGIS, yearsFromPVGIS, gridFactor, classPUE, classWUE, L_PER_KWH_HEAT };

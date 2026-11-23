@@ -12,7 +12,7 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 |---|---|---|---|---|
 | 1 | Catasto AdE – WMS | 1, mappa | ✅ | CC BY 4.0 |
 | 2 | Catasto AdE – WFS | 1 (confine e superficie) | ⚠️ ricerca per foglio/particella non riuscita | CC BY 4.0 |
-| 3 | PVGIS (JRC) – TMY | 14 (clima) | ✅ | uso libero, condizioni formali da leggere |
+| 3 | PVGIS (JRC) – TMY e serie orarie 2005–2023 | 14 (clima) | ✅ | uso libero, condizioni formali da leggere |
 | 4 | ISPRA IdroGEO – API | 4, 5 | ⚠️ codici classi frane da confermare | da verificare |
 | 5 | Geoportale Nazionale MASE – classificazione sismica | 12 | ⚠️ dato al 2012 | nessuna condizione dichiarata |
 | 6 | Geoportale Nazionale MASE – PAI | 4, 5 (riserva) | ⚠️ lento, dati disomogenei | nessuna condizione dichiarata |
@@ -63,6 +63,8 @@ Legenda stato: ✅ verificato e funzionante · ⚠️ funziona con limiti import
 - **Limiti:** 30 chiamate/secondo per IP; **le chiamate dal browser (AJAX) sono vietate** → deve passare dal backend (conferma la scelta di FastAPI).
 - **Licenza:** manuale PVGIS: "completely free to use, with no restrictions on what the results can be used for, and with no registration necessary". Pagina "Usage Conditions" non letta (errore 429): da rileggere.
 - **Nota:** è in beta PVGIS 6 (dati 2014–2025); per ora usiamo la 5.3, versione di produzione.
+- **Serie orarie pluriennali (verificato il 23/11/2026):** `https://re.jrc.ec.europa.eu/api/v5_3/seriescalc?lat=..&lon=..&startyear=2005&endyear=2023&outputformat=json` → ore reali 2005–2023 con `T2m` (anche irraggiamento e vento), **senza umidità relativa**. Circa 14 MB e 10 s per punto; il backend tiene solo le temperature (~1 MB in cache).
+- **Uso nel progetto (Fase 1):** temperature dalle serie 2005–2023 (19 anni) + punto di rugiada medio per mese e ora dall'anno tipo dello stesso punto. L'anno tipo da solo non va usato per l'acqua: sceglie un anno diverso per ogni mese e può capitare un'estate fresca o torrida (vedi DIARIO, 23/11/2026).
 
 ## 4. ISPRA IdroGEO – API
 - **Documentazione:** specifica OpenAPI in `https://idrogeo.isprambiente.it/api/` (versione 3.3.1).

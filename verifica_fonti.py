@@ -66,6 +66,14 @@ def pvgis_tmy():
             f"Tmax {max(T)} °C; ore > 29,4 °C: {sum(t > 29.4 for t in T)}")
 
 
+def pvgis_serie():
+    d = json.loads(get("https://re.jrc.ec.europa.eu/api/v5_3/seriescalc",
+                       {"lat": LAT, "lon": LON, "startyear": 2023, "endyear": 2023, "outputformat": "json"}))
+    h = d["outputs"]["hourly"]
+    assert len(h) == 8760 and "T2m" in h[0]
+    return f"8760 ore del 2023 con T2m (campi: {', '.join(h[0])}); niente umidità"
+
+
 def _idrogeo(lon, lat, r=30):
     return json.loads(get("https://idrogeo.isprambiente.it/api/pir/verifica_pericolosita_at_point",
                           {"center_wkt": f"POINT({lon} {lat})", "radius_meter": r}))
@@ -160,7 +168,7 @@ def terna():
     return "pagina pubblicazioni statistiche raggiungibile, rimanda a dati.terna.it"
 
 
-PROVE = [catasto_wms, catasto_wfs, pvgis_tmy, idrogeo, sismica, natura2000, sitap,
+PROVE = [catasto_wms, catasto_wfs, pvgis_tmy, pvgis_serie, idrogeo, sismica, natura2000, sitap,
          lombardia_contaminati, falda_cmm, nominatim, overpass, terna]
 
 if __name__ == "__main__":
