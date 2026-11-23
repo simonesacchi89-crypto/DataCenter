@@ -227,3 +227,8 @@ Simone ha scelto di **non usare servizi di intelligenza artificiale a pagamento*
 1. La foto aerea più recente disponibile a livello nazionale è del **2012**: per lo stato attuale servono foto recenti, un sopralluogo o un'ortofoto regionale più recente (da verificare come fonte).
 2. Foto libere da terra (Wikimedia Commons): non raggiungibili da questo ambiente, da riprovare in locale.
 3. Descrizione automatica delle foto: non attiva per scelta (vedi Decisione).
+
+## 23 novembre 2026 – Ricerca di nuovi casi di prova
+- Trovati e verificati 5 casi con documenti pubblici sul portale VIA del Ministero dell'Ambiente (più uno di riserva): Liscate, Bornasco, Settimo Milanese (Microsoft MIL03), Zibido San Giacomo (Amazon), Vimercate; riserva Lacchiarella. Elenco, link e cosa estrarre in `CASI_TEST.md`.
+- Limite: tutti in Lombardia. Fuori regione nessuna procedura statale trovata.
+- Prossimo passo proposto: per ogni caso ricavare dai documenti i dati di riferimento e confrontarli con quello che trova lo strumento, per tarare le soglie.
